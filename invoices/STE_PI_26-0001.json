@@ -1,62 +1,32 @@
 {
-  "id": "inv_mv6kp33qh0e",
+  "id": "inv_mv6pxppk210",
   "type": "proforma",
   "status": "draft",
   "date": "2026-10-13",
   "ref": "STE/PI/26-0001",
   "client": "",
-  "address": "Gaaba Road Opp Gaaba police station",
-  "event": "F&B STAFF PARTY",
-  "venue": "Vera Valley Hotel",
-  "dateFrom": "2026-11-09",
+  "address": "",
+  "event": "",
+  "venue": "",
+  "dateFrom": "",
   "dateTo": "",
-  "timeFrom": "19:00",
-  "timeTo": "04:00",
-  "contact": "KIBERU MARK",
+  "timeFrom": "",
+  "timeTo": "",
+  "contact": "",
   "items": [
     {
-      "d": "PA SOUND SYSTEM",
-      "q": 1,
-      "days": 1,
-      "p": 400000
-    },
-    {
-      "d": "TOPS",
-      "q": 3,
-      "days": 1,
-      "p": 0
-    },
-    {
-      "d": "SINGLE BASS ",
-      "q": 1,
-      "days": 1,
-      "p": 0
-    },
-    {
-      "d": "HANDHELD MICS",
-      "q": 2,
-      "days": 1,
-      "p": 0
-    },
-    {
       "d": "",
-      "q": 1,
-      "days": 1,
-      "p": 0
-    },
-    {
-      "d": "DJ SET (CONSOLE & DJ)",
       "q": 1,
       "days": 1,
       "p": 0
     }
   ],
   "discount": 0,
-  "vat": 0,
+  "vat": 1,
   "vatRate": 18,
-  "terms": ". Accounts are due on demand,\nAll payments made to STEREO 1 PRODUCTION.\n\n. Event service delivery only after issuance of an LPO from the client.\n\n. Invoice must be paid within 7 days after tax invoicing.\n. No receipted deposits will be refunded for cancellation of event",
-  "notes": "Payments to be made to:\nAccount Name: Stereo 1 Production\nCASH (UGX)",
-  "created": 1791889422326,
-  "updated": 1791892634110,
+  "terms": "Accounts are due on demand.\nAll payments made to STEREO 1 PRODUCTION.\nEvent service delivery only after issuance of an LPO from the client.\nInvoice must be paid within 7 days after tax invoicing.",
+  "notes": "Payments to be made to:\nAccount Name: Stereo 1 Production (UGX).\nBank: [bank and branch].\nAccount No: [account number]",
+  "created": 1791898222953,
+  "updated": 1791898222953,
   "file": "STE_PI_26-0001.json"
 }

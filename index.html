@@ -127,6 +127,21 @@ table.p-items{width:100%;border-collapse:collapse;font-size:9.5pt}
 .balcell{font-weight:700}
 .balcell.zero{color:var(--ok)}
 @media (max-width:520px){.pay{grid-template-columns:1fr 1fr}}
+.neg{color:var(--bad)}.pos{color:var(--ok)}
+.stat.big{border-width:2px}.stat.big.pos{border-color:#7ac7a6;background:#f2fbf7}.stat.big.neg{border-color:#e3a39b;background:#fdf3f1}
+.stat small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.dgrid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px;align-items:start}
+.mrow{display:grid;grid-template-columns:72px 1fr 110px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:13px}
+.mrow:last-child{border-bottom:0}
+.bar{height:8px;border-radius:4px;margin:2px 0;min-width:2px}
+.bar.rev{background:#2fa57f}.bar.exp{background:#e08a2c}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.crow{padding:6px 0;font-size:13px}
+.crow .top{display:flex;justify-content:space-between;gap:8px}
+.crow .bar{background:#e08a2c;height:6px}
+.fld{padding:8px 10px;border:1px solid #cdd2db;border-radius:7px;background:#fff}
+@media (max-width:1000px){.dgrid{grid-template-columns:1fr}}
 .p-sec{padding:8mm 14mm 0}
 .p-sec h4{margin:0 0 2mm;font-size:9.5pt;color:#333;display:inline-block;border-bottom:.35mm solid var(--blue);padding-bottom:1mm;padding-right:5mm}
 .p-sec div.l{font-size:9pt;color:#444;line-height:1.55;min-height:1em}
@@ -162,7 +177,7 @@ table.p-items{width:100%;border-collapse:collapse;font-size:9.5pt}
 @media print{
   html,body{background:#fff}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .topbar,.toolbar,.formpanel,.toast,#view-library,#view-settings{display:none!important}
+  .topbar,.toolbar,.formpanel,.toast,#view-library,#view-settings,#view-expenses,#view-dashboard{display:none!important}
   main{padding:0;max-width:none}
   .editor{display:block}
   .previewscroll{overflow:visible}
@@ -204,6 +219,8 @@ body.locked .topbar,body.locked main{display:none}
   <nav>
     <button data-view="library" class="on">Invoices</button>
     <button data-view="editor">Editor</button>
+    <button data-view="expenses">Expenses</button>
+    <button data-view="dashboard">Dashboard</button>
     <button data-view="settings">Settings</button>
   </nav>
   <div class="grow"></div>
@@ -305,6 +322,50 @@ body.locked .topbar,body.locked main{display:none}
       <div class="previewscroll"><div class="paper" id="paper"></div></div>
     </div>
   </div>
+</section>
+
+<!-- ================= EXPENSES ================= -->
+<section class="view" id="view-expenses">
+  <div class="toolbar"><div><h2>Expenses &amp; labor</h2><p class="sub" style="margin:0">Record what the company spends, including crew payments. Charge a cost to an event so you can see that job's real profit.</p></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <h3 id="eTitle">Add expense</h3>
+    <div class="row r3">
+      <label class="f">Date <input type="date" id="eDate"></label>
+      <label class="f">Category <select id="eCat"></select></label>
+      <label class="f">Amount (UGX) <input type="number" min="0" step="any" id="eAmt" placeholder="0"></label>
+    </div>
+    <div class="row r3">
+      <label class="f">Description <input id="eDesc" placeholder="e.g. Sound engineer – wedding, fuel for generator"></label>
+      <label class="f"><span id="ePayeeLbl">Paid to</span> <input id="ePayee" list="payeeList" autocomplete="off"></label>
+      <label class="f">Charge to event / invoice <select id="eInv"></select></label>
+    </div>
+    <datalist id="payeeList"></datalist>
+    <div class="toolbar" style="margin:0"><button class="btn pri" id="eSave">Add expense</button><button class="btn" id="eCancel" style="display:none">Cancel edit</button></div>
+  </div>
+  <div class="toolbar">
+    <input id="xQ" type="search" class="fld" placeholder="Search description, person, event…" style="min-width:230px">
+    <select id="xCat" class="fld"></select>
+    <label class="note">From <input type="date" id="xFrom" class="fld"></label>
+    <label class="note">To <input type="date" id="xTo" class="fld"></label>
+  </div>
+  <div class="stats" id="expStats"></div>
+  <div id="expList"></div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="view" id="view-dashboard">
+  <div class="toolbar">
+    <h2>Dashboard</h2><div class="grow"></div>
+    <select id="dPeriod" class="fld"><option value="all">All time</option><option value="month">This month</option><option value="last">Last month</option><option value="year">This year</option><option value="custom">Custom dates…</option></select>
+    <input type="date" id="dFrom" class="fld" style="display:none"><input type="date" id="dTo" class="fld" style="display:none">
+  </div>
+  <div class="stats" id="dStats"></div>
+  <div class="dgrid">
+    <div class="card"><h3>Money in vs money out, by month</h3><div class="legend"><span><i style="background:#2fa57f"></i>Revenue received (excl. VAT)</span><span><i style="background:#e08a2c"></i>Expenses</span></div><div id="dMonths"></div></div>
+    <div class="card"><h3>Where the money goes</h3><div id="dCats"></div></div>
+  </div>
+  <div class="card" style="overflow-x:auto"><h3>Profit per event</h3><p class="note" style="margin-top:-6px">Covers all dates (not filtered by the period above). “Profit if fully paid” assumes every outstanding balance is collected.</p><div id="dEvents"></div></div>
+  <p class="note" style="margin-top:12px"><b>How profit is worked out:</b> money actually received from clients (down payments and paid invoices), minus the VAT inside those receipts (VAT belongs to the tax authority, not to you), minus all expenses including labor. Draft and cancelled invoices are not counted as income.</p>
 </section>
 
 <!-- ================= SETTINGS ================= -->
@@ -475,12 +536,14 @@ addEventListener("resize",fit);
 
 /* ================= views ================= */
 function show(view){
-  if(view==="settings"&&(!session||session.role!=="admin")){toast("Settings are for the admin only","err");view="library"}
+  if(["settings","expenses","dashboard"].includes(view)&&(!session||session.role!=="admin")){toast("This section is for the admin only","err");view="library"}
   $$(".view").forEach(v=>v.classList.toggle("on",v.id==="view-"+view));
   $$(".topbar nav button").forEach(b=>b.classList.toggle("on",b.dataset.view===view));
   if(view==="library")renderLibrary();
   if(view==="editor"){ if(!cur){const k=Object.values(invoices).sort((a,b)=>b.updated-a.updated)[0];cur=k?JSON.parse(JSON.stringify(k)):null;if(!cur){openInvoice(null);return}} fillForm(); renderPreview(); }
   if(view==="settings")fillSettings();
+  if(view==="expenses"){fillExpSelects();resetExpForm();renderExpenses()}
+  if(view==="dashboard")renderDashboard();
   renderChips(); scrollTo(0,0);
 }
 $$(".topbar nav button").forEach(b=>b.onclick=()=>show(b.dataset.view));
@@ -531,7 +594,7 @@ function duplicate(src){
   const n=settings.nextNo; settings.nextNo=n+1; saveSettings();
   const c=JSON.parse(JSON.stringify(src));
   c.id="inv_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-  c.ref=makeRef(c.type,todayISO(),n);c.date=todayISO();c.status="draft";c.payments=[];delete c.file;c.created=c.updated=Date.now();
+  c.ref=makeRef(c.type,todayISO(),n);c.date=todayISO();c.status="draft";c.payments=[];delete c.paidDate;delete c.file;c.created=c.updated=Date.now();
   invoices[c.id]=c;persist();toast("Duplicated as "+c.ref);openInvoice(c.id);
 }
 $("#btnDup").onclick=()=>{flushNow();duplicate(cur)};
@@ -553,6 +616,7 @@ $$("[data-f]").forEach(el=>{
     if(!cur)return; const f=el.dataset.f; let v=el.value;
     if(f==="discount")v=+v||0; if(f==="vat")v=+v;
     const prevType=cur.type; cur[f]=v;
+    if(f==="status"&&v==="paid"&&!cur.paidDate)cur.paidDate=todayISO();
     if(f==="type"&&cur.ref.includes("/"+TYPE[prevType].code+"/"))cur.ref=cur.ref.replace("/"+TYPE[prevType].code+"/","/"+TYPE[v].code+"/"),$('[data-f="ref"]').value=cur.ref;
     if(f==="dateFrom"||f==="dateTo")daysHint();
     changed();
@@ -670,10 +734,11 @@ function syncFolderUi(){$("#btnFolder").textContent=folderHandle?`PC folder: ${f
 $("#btnImport").onclick=()=>$("#fileImport").click();
 $("#fileImport").onchange=async e=>{await importFiles([...e.target.files]);e.target.value=""};
 async function importFiles(files){
-  let added=0,updated=0,skipped=0;
+  let added=0,updated=0,skipped=0,expAdded=0;
   for(const f of files){
     try{
       const data=JSON.parse(await f.text());
+      if(data&&!Array.isArray(data)&&Array.isArray(data.expenses)){const b4=Object.keys(expenses).length;mergeExp(data);expAdded+=Math.max(0,Object.keys(expenses).length-b4);if(!data.invoices)continue}
       const list=Array.isArray(data)?data:data.invoices?data.invoices:[data];
       if(data.settings&&!Array.isArray(data)&&confirm("This backup also contains settings. Replace your current settings (keeps your GitHub token)?")){const tok=settings.gh.token;settings={...DEF,...data.settings,gh:{...DEF.gh,...(data.settings.gh||{}),token:tok}};saveSettings()}
       for(const inv of list){
@@ -683,11 +748,11 @@ async function importFiles(files){
       }
     }catch(e){skipped++}
   }
-  persist();renderLibrary();toast(`Import: ${added} new, ${updated} updated, ${skipped} skipped`);
+  persist();renderLibrary();toast(`Import: ${added} new, ${updated} updated, ${skipped} skipped`+(expAdded?`, ${expAdded} expenses`:""));
 }
 $("#btnExport").onclick=()=>{
   const s=JSON.parse(JSON.stringify(settings));s.gh.token="";
-  download("stereo1-backup-"+todayISO()+".json",JSON.stringify({exported:new Date().toISOString(),settings:s,invoices:Object.values(invoices)},null,2));
+  download("stereo1-backup-"+todayISO()+".json",JSON.stringify({exported:new Date().toISOString(),settings:s,invoices:Object.values(invoices),expenses:Object.values(expenses),deleted:expDel},null,2));
 };
 
 /* ================= GitHub ================= */
@@ -734,6 +799,7 @@ async function ghSyncAll(){
     else meta[inv.id]={...(meta[inv.id]||{}),gh:loc.updated};
   }
   for(const inv of Object.values(invoices)){if(!seen.has(inv.id)){await ghPush(inv);pushed++}}
+  await ghPushExp();
   persist();return {pulled,pushed};
 }
 $("#btnSync").onclick=async()=>{
@@ -743,6 +809,156 @@ $("#btnSync").onclick=async()=>{
   catch(e){toast("GitHub: "+e.message,"err")}
   b.disabled=false;b.textContent="⇅ Sync with GitHub";
 };
+
+/* ================= expenses & labor ================= */
+const CATS=["Labor / crew","Equipment hire","Transport","Fuel / generator","Venue / permits","Marketing","Rent / utilities","Repairs & maintenance","Other"];
+const isLabor=c=>c===CATS[0];
+let expenses=LS.get("s1_expenses",{}), expDel=LS.get("s1_exp_deleted",{});
+const persistExp=()=>{LS.set("s1_expenses",expenses);LS.set("s1_exp_deleted",expDel)};
+let editingExp=null;
+const invLabel=i=>i.ref+(i.client?" – "+i.client:"")+(i.event?" – "+i.event:"");
+const inRange=(d,from,to)=>(!from||(d&&d>=from))&&(!to||(d&&d<=to));
+const expJson=()=>JSON.stringify({expenses:Object.values(expenses),deleted:expDel},null,2);
+function mergeExp(r){
+  let ch=false;
+  for(const [id,t] of Object.entries(r.deleted||{})){if(!expDel[id]||expDel[id]<t){expDel[id]=t;ch=true}}
+  for(const e of (r.expenses||[])){if(!e||!e.id)continue;const l=expenses[e.id];if(!l||(e.updated||0)>(l.updated||0)){expenses[e.id]=e;ch=true}}
+  for(const [id,t] of Object.entries(expDel)){const l=expenses[id];if(l&&(l.updated||0)<=t){delete expenses[id];ch=true}}
+  persistExp();return ch;
+}
+const expPath=()=>{const f=(settings.gh.folder||"").replace(/^\/+|\/+$/g,"");return (f?f+"/":"")+"_expenses.json"};
+async function ghPushExp(){
+  const path=expPath(),ex=await gh(path,{query:ghRef()});
+  if(ex){try{mergeExp(JSON.parse(unb64(ex.content)))}catch(e){}}
+  const body={message:"Update expenses",content:b64(expJson()),branch:settings.gh.branch||"main"};
+  if(ex)body.sha=ex.sha;
+  const r=await gh(path,{method:"PUT",body});
+  if(!r)throw new Error("Repository or branch not found");
+}
+async function saveFolderExp(){
+  if(!folderHandle||!(await perm(folderHandle)))return false;
+  const fh=await folderHandle.getFileHandle("_expenses.json",{create:true});
+  const w=await fh.createWritable();await w.write(expJson());await w.close();return true;
+}
+async function syncExp(){
+  if(folderHandle){try{await saveFolderExp()}catch(e){toast("PC folder: "+e.message,"err")}}
+  if(ghReady()&&settings.gh.auto){try{await ghPushExp()}catch(e){toast("GitHub: "+e.message,"err")}}
+}
+function fillExpSelects(){
+  const keep=$("#xCat").value;
+  $("#eCat").innerHTML=CATS.map(c=>`<option>${esc(c)}</option>`).join("");
+  $("#xCat").innerHTML=`<option value="">All categories</option>`+CATS.map(c=>`<option>${esc(c)}</option>`).join("");
+  $("#xCat").value=keep;
+  const invs=Object.values(invoices).sort((a,b)=>b.updated-a.updated);
+  $("#eInv").innerHTML=`<option value="">General / overhead (no specific event)</option>`+invs.map(i=>`<option value="${i.id}">${esc(invLabel(i))}</option>`).join("");
+  const names=[...new Set(Object.values(expenses).map(e=>e.payee).filter(Boolean))];
+  $("#payeeList").innerHTML=names.map(n=>`<option value="${esc(n)}">`).join("");
+}
+function payeeLbl(){$("#ePayeeLbl").textContent=isLabor($("#eCat").value)?"Paid to (crew member)":"Paid to / supplier"}
+function resetExpForm(){
+  editingExp=null;
+  $("#eDate").value=todayISO();$("#eCat").value=CATS[0];$("#eAmt").value="";$("#eDesc").value="";$("#ePayee").value="";$("#eInv").value="";
+  $("#eTitle").textContent="Add expense";$("#eSave").textContent="Add expense";$("#eCancel").style.display="none";payeeLbl();
+}
+$("#eCat").onchange=payeeLbl;
+$("#eCancel").onclick=resetExpForm;
+$("#eSave").onclick=()=>{
+  const amt=+$("#eAmt").value;
+  if(!(amt>0)){toast("Enter an amount greater than 0","err");return}
+  const id=editingExp||"exp_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), was=!!editingExp;
+  expenses[id]={id,date:$("#eDate").value||todayISO(),cat:$("#eCat").value,desc:$("#eDesc").value.trim(),payee:$("#ePayee").value.trim(),amt,inv:$("#eInv").value,updated:Date.now()};
+  delete expDel[id];persistExp();syncExp();
+  toast(was?"Expense updated":"Expense added");
+  fillExpSelects();resetExpForm();renderExpenses();
+};
+function renderExpenses(){
+  const q=$("#xQ").value.trim().toLowerCase(),cat=$("#xCat").value,from=$("#xFrom").value,to=$("#xTo").value;
+  const all=Object.values(expenses).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b.updated-a.updated);
+  const ref=e=>invoices[e.inv]?invLabel(invoices[e.inv]):"";
+  const list=all.filter(e=>(!cat||e.cat===cat)&&inRange(e.date,from,to)&&(!q||[e.desc,e.payee,e.cat,ref(e)].join(" ").toLowerCase().includes(q)));
+  const tot=list.reduce((s,e)=>s+e.amt,0),lab=list.filter(e=>isLabor(e.cat)).reduce((s,e)=>s+e.amt,0);
+  $("#expStats").innerHTML=`<div class="stat"><b>UGX ${money(tot)}</b><span>Total shown (${list.length} item${list.length===1?"":"s"})</span></div>
+    <div class="stat"><b>UGX ${money(lab)}</b><span>of which labor / crew</span></div>
+    <div class="stat"><b>UGX ${money(tot-lab)}</b><span>of which other costs</span></div>`;
+  if(!list.length){$("#expList").innerHTML=`<div class="empty">${all.length?"No expenses match these filters.":"No expenses yet. Add your first one above."}</div>`;return}
+  $("#expList").innerHTML=`<table class="list"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="hide-sm">Paid to</th><th class="hide-sm">Charged to</th><th class="num">Amount (UGX)</th><th></th></tr></thead><tbody>`+
+  list.map(e=>`<tr><td>${fmtDate(e.date)}</td><td><span class="badge${isLabor(e.cat)?" sent":""}">${esc(e.cat)}</span></td><td>${esc(e.desc)||"<span class=where>—</span>"}</td><td class="hide-sm">${esc(e.payee)}</td><td class="hide-sm where">${e.inv?(invoices[e.inv]?esc(invLabel(invoices[e.inv])):"(deleted invoice)"):"General / overhead"}</td><td class="num"><b>${money(e.amt)}</b></td>
+    <td style="white-space:nowrap;text-align:right"><button class="btn sm" data-xe="${e.id}">Edit</button> <button class="btn sm danger" data-xd="${e.id}">Delete</button></td></tr>`).join("")+`</tbody></table>`;
+  $$("[data-xe]").forEach(b=>b.onclick=()=>{
+    const e=expenses[b.dataset.xe];editingExp=e.id;
+    $("#eDate").value=e.date||"";$("#eCat").value=e.cat;$("#eAmt").value=e.amt;$("#eDesc").value=e.desc||"";$("#ePayee").value=e.payee||"";$("#eInv").value=invoices[e.inv]?e.inv:"";
+    $("#eTitle").textContent="Edit expense";$("#eSave").textContent="Save changes";$("#eCancel").style.display="";payeeLbl();scrollTo(0,0);
+  });
+  $$("[data-xd]").forEach(b=>b.onclick=()=>{
+    const e=expenses[b.dataset.xd];if(!confirm(`Delete this expense?\n\n${e.cat} – UGX ${money(e.amt)}${e.desc?" – "+e.desc:""}`))return;
+    delete expenses[e.id];expDel[e.id]=Date.now();persistExp();syncExp();
+    if(editingExp===e.id)resetExpForm();renderExpenses();
+  });
+}
+["#xQ","#xCat","#xFrom","#xTo"].forEach(id=>{$(id).addEventListener("input",renderExpenses);$(id).addEventListener("change",renderExpenses)});
+
+/* ================= dashboard ================= */
+function receipts(inv){            // money actually received for an invoice: [{d,a}]
+  if(inv.status==="cancelled")return [];
+  const c=calc(inv),out=[];
+  (inv.payments||[]).forEach(p=>{if(+p.a>0)out.push({d:p.dt||inv.date,a:+p.a})});
+  if(inv.status==="paid"&&c.due>c.paid)out.push({d:inv.paidDate||inv.date,a:c.due-c.paid});
+  return out;
+}
+function periodRange(){
+  const p=$("#dPeriod").value,now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  const iso=(yy,mm,dd)=>yy+"-"+String(mm+1).padStart(2,"0")+"-"+String(dd).padStart(2,"0");
+  if(p==="month")return [iso(y,m,1),iso(y,m,new Date(y,m+1,0).getDate())];
+  if(p==="last"){const d=new Date(y,m-1,1);return [iso(d.getFullYear(),d.getMonth(),1),iso(d.getFullYear(),d.getMonth(),new Date(y,m,0).getDate())]}
+  if(p==="year")return [y+"-01-01",y+"-12-31"];
+  if(p==="custom")return [$("#dFrom").value,$("#dTo").value];
+  return ["",""];
+}
+const pc=n=>`<span class="${n<0?"neg":"pos"}">${money(n)}</span>`;
+function renderDashboard(){
+  const custom=$("#dPeriod").value==="custom";$("#dFrom").style.display=$("#dTo").style.display=custom?"":"none";
+  const [from,to]=periodRange();
+  const invs=Object.values(invoices).filter(i=>i.status!=="cancelled");
+  let rec=0,recVat=0,invoiced=0,out=0;const months={};
+  const bump=(d,k,v)=>{const m=(d||"").slice(0,7);if(!m)return;(months[m]=months[m]||{rev:0,exp:0})[k]+=v};
+  invs.forEach(i=>{
+    const c=calc(i),f=c.due>0?c.total/c.due:1;
+    if(i.status!=="draft"&&inRange(i.date,from,to))invoiced+=c.total;
+    if(i.status==="sent")out+=c.bal;
+    receipts(i).forEach(r=>{if(!inRange(r.d,from,to))return;rec+=r.a;recVat+=r.a*(1-f);bump(r.d,"rev",r.a*f)});
+  });
+  const exps=Object.values(expenses).filter(e=>inRange(e.date,from,to));
+  exps.forEach(e=>bump(e.date,"exp",e.amt));
+  const expTotal=exps.reduce((s,e)=>s+e.amt,0),labor=exps.filter(e=>isLabor(e.cat)).reduce((s,e)=>s+e.amt,0);
+  const netRev=rec-recVat,profit=netRev-expTotal,margin=netRev>0?Math.round(profit/netRev*100):null;
+  $("#dStats").innerHTML=`<div class="stat big ${profit>=0?"pos":"neg"}"><b>UGX ${money(profit)}</b><span>Net profit</span><small>${margin==null?"No revenue received yet":margin+"% of revenue received"}</small></div>
+    <div class="stat"><b>UGX ${money(netRev)}</b><span>Revenue received (excl. VAT)</span><small>UGX ${money(rec)} cash incl. VAT</small></div>
+    <div class="stat"><b>UGX ${money(expTotal)}</b><span>Total expenses</span><small>UGX ${money(labor)} labor · UGX ${money(expTotal-labor)} other</small></div>
+    <div class="stat"><b>UGX ${money(invoiced)}</b><span>Invoiced in period (excl. VAT)</span><small>Sent and paid invoices</small></div>
+    <div class="stat"><b>UGX ${money(out)}</b><span>Still owed by clients</span><small>Balance on sent invoices, all dates</small></div>
+    <div class="stat"><b>UGX ${money(recVat)}</b><span>VAT collected</span><small>Set aside for the tax authority</small></div>`;
+  // months
+  const keys=Object.keys(months).sort().slice(-12),mx=Math.max(1,...keys.map(k=>Math.max(months[k].rev,months[k].exp)));
+  $("#dMonths").innerHTML=keys.length?keys.map(k=>{const m=months[k],[y,mo]=k.split("-");
+    return `<div class="mrow"><span>${MONTHS[+mo-1].slice(0,3)} ${y}</span><div><div class="bar rev" style="width:${m.rev/mx*100}%"></div><div class="bar exp" style="width:${m.exp/mx*100}%"></div></div><span class="num">${pc(m.rev-m.exp)}</span></div>`}).join(""):`<div class="note">Nothing recorded in this period.</div>`;
+  // categories
+  const cats={};exps.forEach(e=>cats[e.cat]=(cats[e.cat]||0)+e.amt);
+  const ck=Object.keys(cats).sort((a,b)=>cats[b]-cats[a]);
+  $("#dCats").innerHTML=ck.length?ck.map(k=>`<div class="crow"><div class="top"><span>${esc(k)}</span><span><b>${money(cats[k])}</b> <span class="where">${Math.round(cats[k]/expTotal*100)}%</span></span></div><div class="bar" style="width:${cats[k]/cats[ck[0]]*100}%"></div></div>`).join(""):`<div class="note">No expenses in this period.</div>`;
+  // per event (all dates)
+  const all=Object.values(expenses);
+  const rows=invs.map(i=>{
+    const c=calc(i),f=c.due>0?c.total/c.due:1,recNet=receipts(i).reduce((s,r)=>s+r.a*f,0);
+    const ex=all.filter(e=>e.inv===i.id),lab=ex.filter(e=>isLabor(e.cat)).reduce((s,e)=>s+e.amt,0),oth=ex.reduce((s,e)=>s+e.amt,0)-lab;
+    return {i,c,recNet,lab,oth,profit:recNet-lab-oth,proj:c.total-lab-oth};
+  }).filter(r=>r.i.status!=="draft"||r.recNet||r.lab||r.oth).sort((a,b)=>(b.i.date||"").localeCompare(a.i.date||""));
+  const listed=new Set(rows.map(r=>r.i.id)),oh=all.filter(e=>!listed.has(e.inv)),ohT=oh.reduce((s,e)=>s+e.amt,0);
+  $("#dEvents").innerHTML=rows.length||ohT?`<table class="list"><thead><tr><th>Invoice / event</th><th class="num">Invoiced</th><th class="num">Received</th><th class="num">Labor</th><th class="num">Other costs</th><th class="num">Profit so far</th><th class="num">Profit if fully paid</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr><td><b>${esc(r.i.ref)}</b> <span class="badge ${r.i.status}">${r.i.status}</span><div class="where">${esc([r.i.client,r.i.event].filter(Boolean).join(" – "))}</div></td><td class="num">${money(r.c.total)}</td><td class="num">${money(r.recNet)}</td><td class="num">${money(r.lab)}</td><td class="num">${money(r.oth)}</td><td class="num"><b>${pc(r.profit)}</b></td><td class="num">${pc(r.proj)}</td></tr>`).join("")+
+    (ohT?`<tr><td><b>General / overhead</b><div class="where">Costs not charged to a specific event (incl. cancelled jobs)</div></td><td class="num">—</td><td class="num">—</td><td class="num">${money(oh.filter(e=>isLabor(e.cat)).reduce((s,e)=>s+e.amt,0))}</td><td class="num">${money(oh.filter(e=>!isLabor(e.cat)).reduce((s,e)=>s+e.amt,0))}</td><td class="num"><b>${pc(-ohT)}</b></td><td class="num">${pc(-ohT)}</td></tr>`:"")+`</tbody></table><p class="note" style="margin:8px 0 0">All amounts in UGX, excluding VAT.</p>`
+    :`<div class="empty">Send an invoice and record some expenses to see profit per event.</div>`;
+}
+["#dPeriod","#dFrom","#dTo"].forEach(id=>{$(id).addEventListener("input",renderDashboard);$(id).addEventListener("change",renderDashboard)});
 
 /* ================= settings view ================= */
 function fillSettings(){
@@ -797,7 +1013,7 @@ function applySession(){
   $("#login").hidden=on;
   if(on){
     $("#who").innerHTML=`Signed in: <b>${esc(session.name)}</b>${session.role==="admin"?" (admin)":""}`;
-    const sb=$(".topbar nav button[data-view=settings]"); if(sb)sb.style.display=session.role==="admin"?"":"none";
+    $$(".topbar nav button").forEach(b=>{if(["settings","expenses","dashboard"].includes(b.dataset.view))b.style.display=session.role==="admin"?"":"none"});
     $("#lu").value="";$("#lp").value="";$("#lerr").textContent="";
     fit&&setTimeout(fit,0);
   }else{ $("#lu").focus() }

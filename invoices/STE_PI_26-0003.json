@@ -1,0 +1,57 @@
+{
+  "id": "inv_mvh2vzfo1js",
+  "type": "proforma",
+  "status": "sent",
+  "date": "2026-10-20",
+  "ref": "STE/PI/26-0003",
+  "client": "",
+  "address": "Gaaba Road opp Gaaba police station",
+  "event": "F & B STAFF PARTY",
+  "venue": "Vera V alley Hotel",
+  "dateFrom": "2026-11-09",
+  "dateTo": "",
+  "timeFrom": "19:00",
+  "timeTo": "",
+  "contact": "KIBERU MARK",
+  "items": [
+    {
+      "d": "PA SOUND SYSTEM",
+      "q": 1,
+      "days": 1,
+      "p": 400000
+    },
+    {
+      "d": "TOPS",
+      "q": 3,
+      "days": 1,
+      "p": 0
+    },
+    {
+      "d": "SINGLE BASS",
+      "q": 1,
+      "days": 1,
+      "p": 0
+    },
+    {
+      "d": "HANDHELD MICS",
+      "q": 2,
+      "days": 1,
+      "p": 0
+    },
+    {
+      "d": "DJ SET (CONSOLE & DJ)",
+      "q": 1,
+      "days": 1,
+      "p": 0
+    }
+  ],
+  "payments": [],
+  "discount": 0,
+  "vat": 0,
+  "vatRate": 18,
+  "terms": "Accounts are due on demand.\nAll payments made to STEREO 1 PRODUCTION.\nEvent service delivery only after issuance of an LPO from the client.\nInvoice must be paid within 7 days after tax invoicing.",
+  "notes": "Payments to be made to:\nAccount Name: Stereo 1 Production (UGX).\nBank: [bank and branch].\nAccount No: [account number]",
+  "created": 1792524639012,
+  "updated": 1792525090092,
+  "file": "STE_PI_26-0003.json"
+}

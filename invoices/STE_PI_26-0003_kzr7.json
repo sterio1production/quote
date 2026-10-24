@@ -1,7 +1,7 @@
 {
   "id": "inv_mvj7fe8kzr7",
   "type": "proforma",
-  "status": "draft",
+  "status": "sent",
   "date": "2026-10-22",
   "ref": "STE/PI/26-0003",
   "client": "UGANDA CANCER INSTITUTE",
@@ -46,6 +46,6 @@
   "terms": "Accounts are due on demand.\nAll payments made to STEREO 1 PRODUCTION.\nDeposit must be paid within 1week  days before Event .\nNo Receipted deposits will be refunded for cancellation of the event",
   "notes": "Payments to be made to:\nAccount Name: Stereo 1 Production (UGX).\nCASH",
   "created": 1792653195476,
-  "updated": 1792653220139,
+  "updated": 1792878752696,
   "file": "STE_PI_26-0003_kzr7.json"
 }

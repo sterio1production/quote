@@ -114,10 +114,11 @@ table.p-items{width:100%;border-collapse:collapse;font-size:9.5pt}
 .p-tot tr.dk td{background:#2b2c33;color:#fff}
 .p-tot tr.pd td{background:#e9f6f0;color:#12805c}
 .p-tot td small{display:block;font-weight:400;font-size:7.5pt;opacity:.85}
-.pay{display:grid;grid-template-columns:1fr 110px 130px 26px;gap:6px;align-items:end;padding:6px 0;border-bottom:1px solid #eef0f4}
+.pay{display:grid;grid-template-columns:1fr 110px 110px 118px 80px 26px;gap:6px;align-items:end;padding:6px 0;border-bottom:1px solid #eef0f4}
 .pay:last-of-type{border-bottom:0}
 .pay label{font-size:11px;color:var(--muted);display:block}
 .pay input{width:100%;padding:6px 8px;border:1px solid #cdd2db;border-radius:6px;min-width:0;background:#fff}
+.pay select{width:100%;padding:6px 8px;border:1px solid #cdd2db;border-radius:6px;min-width:0;background:#fff}
 .paysum{margin-top:10px;padding:10px 12px;border-radius:8px;background:#f4f6fa;font-size:13px}
 .paysum div{display:flex;justify-content:space-between;gap:10px}
 .paysum .bal{font-weight:700;font-size:14px;margin-top:4px;padding-top:4px;border-top:1px solid #dfe2e8;color:var(--blue-d)}
@@ -174,13 +175,12 @@ table.p-items{width:100%;border-collapse:collapse;font-size:9.5pt}
 @media (max-width:520px){.r2,.r3{grid-template-columns:1fr}}
 
 @page{size:A4;margin:0}
+#printHost{display:none}
 @media print{
   html,body{background:#fff}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .topbar,.toolbar,.formpanel,.toast,#view-library,#view-settings,#view-expenses,#view-dashboard{display:none!important}
-  main{padding:0;max-width:none}
-  .editor{display:block}
-  .previewscroll{overflow:visible}
+  .topbar,.toast,#login,main{display:none!important}
+  #printHost{display:block!important}
   .paper{box-shadow:none;zoom:1!important;margin:0;width:210mm}
 }
 
@@ -198,6 +198,15 @@ body.locked .topbar,body.locked main{display:none}
 .topbar .who b{color:#fff}
 .topbar .lo{background:#ffffff14;border:0;color:#fff;padding:6px 12px;border-radius:6px;font-weight:600;font-size:12.5px}
 .topbar .lo:hover{background:#ffffff2a}
+
+/* ---------- clients, reports, credit notes ---------- */
+.overdue{color:var(--bad);font-weight:700}
+.badge.credit{background:#efe7fb;color:#6d3fc0}
+.pw{display:grid;grid-template-columns:130px 1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:13px}
+.pw input{padding:6px 8px;border:1px solid #cdd2db;border-radius:6px;min-width:0;background:#fff}
+.cat-row{display:grid;grid-template-columns:1fr 90px 130px auto 26px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #eef0f4}
+.cat-row input{padding:6px 8px;border:1px solid #cdd2db;border-radius:6px;min-width:0;background:#fff}
+@media (max-width:900px){.pw{grid-template-columns:1fr 1fr;gap:4px}}
 </style>
 </head>
 <body class="locked">
@@ -219,8 +228,10 @@ body.locked .topbar,body.locked main{display:none}
   <nav>
     <button data-view="library" class="on">Invoices</button>
     <button data-view="editor">Editor</button>
+    <button data-view="clients">Clients</button>
     <button data-view="expenses">Expenses</button>
     <button data-view="dashboard">Dashboard</button>
+    <button data-view="reports">Reports</button>
     <button data-view="settings">Settings</button>
   </nav>
   <div class="grow"></div>
@@ -264,7 +275,7 @@ body.locked .topbar,body.locked main{display:none}
         <h3>Document</h3>
         <div class="row r2">
           <label class="f">Type
-            <select data-f="type"><option value="proforma">Proforma Invoice</option><option value="tax">Tax Invoice</option></select>
+            <select data-f="type"><option value="proforma">Proforma Invoice</option><option value="tax">Tax Invoice</option><option value="credit">Credit Note</option></select>
           </label>
           <label class="f">Status (shows as stamp)
             <select data-f="status"><option value="draft">Draft</option><option value="sent">Sent</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select>
@@ -274,10 +285,16 @@ body.locked .topbar,body.locked main{display:none}
           <label class="f">Invoice date <input type="date" data-f="date"></label>
           <label class="f">Reference <input data-f="ref"></label>
         </div>
+        <div class="row r2">
+          <label class="f">Due date <input type="date" data-f="dueDate"></label>
+          <label class="f" id="efrisWrap" style="display:none">EFRIS / fiscal no. <input data-f="efris" placeholder="Number from URA EFRIS"></label>
+        </div>
+        <label class="f" id="againstWrap" style="display:none">Credit against (invoice reference) <input data-f="againstRef" placeholder="e.g. STE/TI/25-0012"></label>
       </div>
       <div class="card">
         <h3>Client &amp; event</h3>
-        <label class="f">Client <input data-f="client" placeholder="e.g. Speke Resort and Conference Centre, Munyonyo"></label>
+        <label class="f">Client <input data-f="client" list="clientList" placeholder="e.g. Speke Resort and Conference Centre, Munyonyo"></label>
+        <datalist id="clientList"></datalist>
         <label class="f">Address <input data-f="address"></label>
         <label class="f">Event <input data-f="event"></label>
         <label class="f">Venue <input data-f="venue"></label>
@@ -294,10 +311,8 @@ body.locked .topbar,body.locked main{display:none}
       <div class="card">
         <h3>Items</h3>
         <div id="itemRows"></div>
-        <div class="toolbar" style="margin:10px 0 0"><button class="btn sm" id="btnAddItem">+ Add item</button><span class="note" id="daysHint"></span></div>
-        <datalist id="svcList">
-          <option value="PA SOUND SYSTEM"><option value="LINE ARRAY SPEAKERS"><option value="DIGITAL MIXER"><option value="WIRELESS MICROPHONES"><option value="MOVING HEAD LIGHTS"><option value="STAGE LIGHTING"><option value="STAGE 8M X 6M"><option value="DJ SET (CONSOLE &amp; DJ)"><option value="LIVE BAND BACKLINE"><option value="LIVE STREAM AUDIO"><option value="SOUND ENGINEER"><option value="GENERATOR">
-        </datalist>
+        <div class="toolbar" style="margin:10px 0 0"><button class="btn sm" id="btnAddItem">+ Add item</button><select id="catPick" class="fld"></select><span class="note" id="daysHint"></span></div>
+        <datalist id="svcList"></datalist>
         <div class="row r2" style="margin-top:12px">
           <label class="f">Discount (UGX) <input type="number" min="0" data-f="discount"></label>
           <label class="f">VAT
@@ -322,6 +337,28 @@ body.locked .topbar,body.locked main{display:none}
       <div class="previewscroll"><div class="paper" id="paper"></div></div>
     </div>
   </div>
+</section>
+
+<!-- ================= CLIENTS ================= -->
+<section class="view" id="view-clients">
+  <div class="card" style="margin-bottom:16px">
+    <h3 id="cTitle">Add client</h3>
+    <div class="row r3">
+      <label class="f">Client name <input id="cName" placeholder="e.g. Speke Resort and Conference Centre"></label>
+      <label class="f">Contact person <input id="cContact"></label>
+      <label class="f">Phone <input id="cPhone"></label>
+    </div>
+    <div class="row r3">
+      <label class="f">Address <input id="cAddress"></label>
+      <label class="f">TIN <input id="cTin"></label>
+      <label class="f">Email <input id="cEmail"></label>
+    </div>
+    <label class="f">Notes <input id="cNotes"></label>
+    <div class="toolbar" style="margin:0"><button class="btn pri" id="cSave">Add client</button><button class="btn" id="cCancel" style="display:none">Cancel edit</button></div>
+  </div>
+  <div class="toolbar"><input id="cQ" type="search" class="fld" placeholder="Search clients…" style="min-width:230px"><div class="grow"></div><button class="btn" id="btnClientsCsv">Export CSV</button></div>
+  <div class="stats" id="cliStats"></div>
+  <div id="cliList"></div>
 </section>
 
 <!-- ================= EXPENSES ================= -->
@@ -368,6 +405,46 @@ body.locked .topbar,body.locked main{display:none}
   <p class="note" style="margin-top:12px"><b>How profit is worked out:</b> money actually received from clients (down payments and paid invoices), minus the VAT inside those receipts (VAT belongs to the tax authority, not to you), minus all expenses including labor. Draft and cancelled invoices are not counted as income.</p>
 </section>
 
+<!-- ================= REPORTS ================= -->
+<section class="view" id="view-reports">
+  <div class="toolbar">
+    <div><h2>Reports</h2></div><div class="grow"></div>
+    <label class="note">From <input type="date" id="rFrom" class="fld"></label>
+    <label class="note">To <input type="date" id="rTo" class="fld"></label>
+  </div>
+  <div class="set-grid">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:6px"><h3 style="margin:0">Aged receivables</h3><div class="grow"></div><button class="btn sm" id="btnAgingCsv">CSV</button></div>
+        <p class="note" style="margin-top:-2px">Unpaid balances on sent invoices, grouped by how overdue they are (uses each invoice's due date).</p>
+        <div id="rAging"></div>
+      </div>
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:6px"><h3 style="margin:0">VAT report</h3><div class="grow"></div><button class="btn sm" id="btnVatCsv">CSV</button></div>
+        <p class="note" style="margin-top:-2px">Output VAT on tax invoices and credit notes dated in the period — for the URA filing.</p>
+        <div id="rVat" style="overflow-x:auto"></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:6px"><h3 style="margin:0">Income statement</h3><div class="grow"></div><button class="btn sm" id="btnPnlCsv">CSV</button></div>
+        <p class="note" style="margin-top:-2px">Cash received (net of VAT and credit notes) minus expenses, for the period above.</p>
+        <div id="rPnl"></div>
+      </div>
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:6px"><h3 style="margin:0">Payments received</h3><div class="grow"></div><button class="btn sm" id="btnPayCsv">CSV</button></div>
+        <div id="rPays" style="overflow-x:auto;max-height:340px"></div>
+      </div>
+      <div class="card">
+        <h3>Client statement</h3>
+        <div class="toolbar"><select id="stClient" class="fld" style="min-width:220px"></select><button class="btn pri" id="btnStatement">Preview</button></div>
+        <div id="stWrap" style="overflow:auto;max-height:70vh"><div class="paper" id="stPaper" style="display:none"></div></div>
+        <div class="toolbar" style="margin-top:10px"><button class="btn" id="btnStatementPrint" style="display:none">Print / Save as PDF</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= SETTINGS ================= -->
 <section class="view" id="view-settings">
   <div class="toolbar"><h2>Settings</h2><div class="grow"></div><button class="btn pri" id="btnSaveSettings">Save settings</button></div>
@@ -400,6 +477,7 @@ body.locked .topbar,body.locked main{display:none}
           <label class="f">VAT rate % <input type="number" min="0" step="0.5" data-s="vatRate"></label>
         </div>
         <p class="note" style="margin-top:-4px">Example: <b id="refEx"></b></p>
+        <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-s="efrisOn" style="width:auto;margin:0"> Ask for an EFRIS / URA fiscal number on tax invoices</label>
         <label class="f">Default service terms <textarea data-s="terms" rows="5"></textarea></label>
         <label class="f">Default notes / bank details <textarea data-s="notes" rows="5"></textarea></label>
       </div>
@@ -418,11 +496,35 @@ body.locked .topbar,body.locked main{display:none}
         <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-g="auto" style="width:auto;margin:0"> Push to GitHub whenever I press Save</label>
         <button class="btn sm" id="btnTestGh">Test connection</button> <span class="note" id="ghTest"></span>
       </div>
+      <div class="card">
+        <h3>Price list (services &amp; equipment)</h3>
+        <p class="note" style="margin-top:0">Reusable items with standard prices. They appear in the editor's “From price list” box and as you type item names.</p>
+        <div id="catRows"></div>
+        <div class="cat-row" style="border-bottom:0">
+          <input id="catD" placeholder="Item, e.g. LINE ARRAY SOUND SYSTEM">
+          <input id="catU" placeholder="Unit">
+          <input id="catP" type="number" min="0" step="any" placeholder="Price (UGX)">
+          <button class="btn sm pri" id="catAdd">Add</button>
+          <span></span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Users &amp; passwords</h3>
+        <p class="note" style="margin-top:0">People who can sign in on this device. Set a new password or remove accounts here.</p>
+        <div id="userRows"></div>
+        <div class="pw" style="border-bottom:0">
+          <input id="nuName" placeholder="username">
+          <input id="nuPass" type="password" placeholder="password">
+          <select id="nuRole"><option value="user">Staff</option><option value="admin">Admin</option></select>
+          <button class="btn sm pri" id="nuAdd">Add</button>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 </main>
 <div class="toast" id="toast"></div>
+<div id="printHost"></div>
 
 <script>
 "use strict";
@@ -442,7 +544,7 @@ const DEF={
   tel:"+256 752494680 / +256 772494680 / +256 701957377",
   email:"",web:"",tin:"",social:"@stereo1production",
   footer:"We provide Professional Sound, Lighting, Staging, Live stream audio & Event production for concerts, weddings, conferences and corporate events",
-  prefix:"STE",nextNo:1,vatRate:18,
+  prefix:"STE",nextNo:1,nextRcpt:1,vatRate:18,efrisOn:true,
   terms:"Accounts are due on demand.\nAll payments made to STEREO 1 PRODUCTION.\nEvent service delivery only after issuance of an LPO from the client.\nInvoice must be paid within 7 days after tax invoicing.",
   notes:"Payments to be made to:\nAccount Name: Stereo 1 Production (UGX).\nBank: [bank and branch].\nAccount No: [account number]",
   logo:"",stamp:"",
@@ -458,13 +560,13 @@ let meta=LS.get("s1_meta",{});                  // id -> {gh:updated, pc:updated
 let cur=null;                                   // invoice being edited
 const persist=()=>{LS.set("s1_invoices",invoices);LS.set("s1_meta",meta)};
 const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
-const TYPE={proforma:{title:"PROFORMA INVOICE",code:"PI"},tax:{title:"TAX INVOICE",code:"TI"}};
+const TYPE={proforma:{title:"PROFORMA INVOICE",code:"PI"},tax:{title:"TAX INVOICE",code:"TI"},credit:{title:"CREDIT NOTE",code:"CN"}};
 function makeRef(type,dateISO,n){const yy=String(dateISO||todayISO()).slice(2,4);return `${settings.prefix}/${TYPE[type].code}/${yy}-${String(n).padStart(4,"0")}`}
 function newInvoice(){
   const n=settings.nextNo; settings.nextNo=n+1; saveSettings();
   const date=todayISO();
   return {id:"inv_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
-    type:"proforma",status:"draft",date,ref:makeRef("proforma",date,n),
+    type:"proforma",status:"draft",date,ref:makeRef("proforma",date,n),dueDate:"",efris:"",againstRef:"",
     client:"",address:"",event:"",venue:"",dateFrom:"",dateTo:"",timeFrom:"",timeTo:"",contact:"",
     items:[{d:"",q:1,days:1,p:0}],payments:[],discount:0,vat:1,vatRate:settings.vatRate,
     terms:settings.terms,notes:settings.notes,created:Date.now(),updated:Date.now()};
@@ -497,7 +599,11 @@ function renderPaper(inv){
   const from=[`<b>${esc(s.name)}</b>`,...String(s.address).split("\n").filter(Boolean).map(esc),
     s.tel&&"Tel: "+esc(s.tel), s.email&&esc(s.email), s.web&&esc(s.web), s.tin&&"TIN: "+esc(s.tin), s.social&&esc(s.social)].filter(Boolean).join("<br>");
   const time=inv.timeFrom&&inv.timeTo?`${inv.timeFrom} to ${inv.timeTo}`:(inv.timeFrom||inv.timeTo||"");
-  const rows=[["Invoice date",fmtDate(inv.date)],["Reference",inv.ref],["Client",inv.client],["Address",inv.address],
+  const rows=[["Invoice date",fmtDate(inv.date)],["Reference",inv.ref],
+    ...(inv.dueDate?[["Due date",fmtDate(inv.dueDate)]]:[]),
+    ...(inv.efris?[["EFRIS no.",inv.efris]]:[]),
+    ...(inv.type==="credit"&&inv.againstRef?[["Credit against",inv.againstRef]]:[]),
+    ["Client",inv.client],["Address",inv.address],
     ["Event",inv.event,1],["Venue",inv.venue],["Event date",eventDates(inv)],["Event time",time],["Contact person",inv.contact]]
     .filter(r=>r[1]).map(r=>`<div><span class="k">${r[0]}:</span><span class="v${r[2]?" strong":""}">${esc(r[1])}</span></div>`).join("");
   const items=inv.items.filter(i=>i.d||+i.p).map(i=>`<tr><td>${esc(i.d)}</td><td class="c">${esc(i.q)}</td><td class="c">${esc(i.days)}</td><td>${money(i.p)}</td><td>${money((+i.q||0)*(+i.days||0)*(+i.p||0))}</td></tr>`).join("")
@@ -532,11 +638,11 @@ function fit(){
   const p=$("#paper"); p.style.zoom=1;
   const z=Math.min(1,(wrap.clientWidth-2)/p.offsetWidth); p.style.zoom=z;
 }
-addEventListener("resize",fit);
+addEventListener("resize",fit);addEventListener("resize",fitSt);
 
 /* ================= views ================= */
 function show(view){
-  if(["settings","expenses","dashboard"].includes(view)&&(!session||session.role!=="admin")){toast("This section is for the admin only","err");view="library"}
+  if(["settings","expenses","dashboard","reports"].includes(view)&&(!session||session.role!=="admin")){toast("This section is for the admin only","err");view="library"}
   $$(".view").forEach(v=>v.classList.toggle("on",v.id==="view-"+view));
   $$(".topbar nav button").forEach(b=>b.classList.toggle("on",b.dataset.view===view));
   if(view==="library")renderLibrary();
@@ -544,6 +650,8 @@ function show(view){
   if(view==="settings")fillSettings();
   if(view==="expenses"){fillExpSelects();resetExpForm();renderExpenses()}
   if(view==="dashboard")renderDashboard();
+  if(view==="clients"){fillClientList();renderClients()}
+  if(view==="reports"){initReports();renderReports()}
   renderChips(); scrollTo(0,0);
 }
 $$(".topbar nav button").forEach(b=>b.onclick=()=>show(b.dataset.view));
@@ -565,16 +673,18 @@ function renderLibrary(){
   const all=Object.values(invoices).sort((a,b)=>b.updated-a.updated);
   const q=$("#q").value.trim().toLowerCase();
   const list=all.filter(i=>!q||[i.ref,i.client,i.event,i.venue].join(" ").toLowerCase().includes(q));
-  const sum=(f,k)=>all.filter(f).reduce((s,i)=>s+calc(i)[k||"due"],0);
+  const sum=(f,k)=>all.filter(f).reduce((s,i)=>s+(i.type==="credit"?-1:1)*calc(i)[k||"due"],0);
+  const overdue=i=>i.type!=="credit"&&i.status==="sent"&&calc(i).bal>0&&ageBucket(i)!=="current";
   $("#stats").innerHTML=`<div class="stat"><b>${all.length}</b><span>Invoices stored</span></div>
     <div class="stat"><b>UGX ${money(sum(i=>i.status==="sent","bal"))}</b><span>Outstanding balance (sent)</span></div>
+    <div class="stat"><b>UGX ${money(sum(i=>overdue,"bal"))}</b><span>Overdue (past due date)</span></div>
     <div class="stat"><b>UGX ${money(sum(i=>i.status==="sent","paid"))}</b><span>Down payments received (sent)</span></div>
     <div class="stat"><b>UGX ${money(sum(i=>i.status==="paid"))}</b><span>Paid</span></div>`;
   if(!list.length){$("#listHost").innerHTML=`<div class="empty">${all.length?"No invoices match your search.":"No invoices yet. Click <b>+ New invoice</b> to create your first one."}</div>`;return}
   $("#listHost").innerHTML=`<table class="list"><thead><tr><th>Reference</th><th>Client</th><th class="hide-sm">Event</th><th class="hide-sm">Date</th><th class="num">Total due (UGX)</th><th class="num">Balance (UGX)</th><th>Status</th><th class="hide-sm">Stored</th><th></th></tr></thead><tbody>`+
   list.map(i=>{const m=meta[i.id]||{};
     const w=[`<i>Browser</i>`,m.pc>=i.updated?`<i>PC</i>`:"",m.gh>=i.updated?`<i>GitHub</i>`:""].filter(Boolean).join(" · ");
-    return `<tr><td><b>${esc(i.ref)}</b><div class="where">${TYPE[i.type].title.toLowerCase()}</div></td><td>${esc(i.client)||"<span class=where>—</span>"}</td><td class="hide-sm">${esc(i.event)}</td><td class="hide-sm">${fmtDate(i.date)}</td><td class="num">${money(calc(i).due)}</td>${balCell(i)}<td><span class="badge ${i.status==="sent"&&calc(i).paid>0?"part":i.status}">${i.status==="sent"&&calc(i).paid>0?"part paid":i.status}</span></td><td class="hide-sm where">${w}</td>
+    return `<tr><td><b>${esc(i.ref)}</b><div class="where">${TYPE[i.type].title.toLowerCase()}</div></td><td>${esc(i.client)||"<span class=where>—</span>"}</td><td class="hide-sm">${esc(i.event)}</td><td class="hide-sm">${fmtDate(i.date)}${i.dueDate?`<div class="where ${overdue(i)?"overdue":""}">Due ${fmtDate(i.dueDate)}</div>`:""}</td><td class="num">${money(calc(i).due)}</td>${balCell(i)}<td><span class="badge ${i.type==="credit"?"credit":(i.status==="sent"&&calc(i).paid>0?"part":i.status)}">${i.type==="credit"?"credit note":(i.status==="sent"&&calc(i).paid>0?"part paid":i.status)}</span></td><td class="hide-sm where">${w}</td>
     <td style="white-space:nowrap;text-align:right"><button class="btn sm" data-open="${i.id}">Open</button> <button class="btn sm" data-dup="${i.id}">Duplicate</button> <button class="btn sm danger" data-del="${i.id}">Delete</button></td></tr>`}).join("")+`</tbody></table>`;
   $$("[data-open]").forEach(b=>b.onclick=()=>openInvoice(b.dataset.open));
   $$("[data-dup]").forEach(b=>b.onclick=()=>duplicate(invoices[b.dataset.dup]));
@@ -609,7 +719,21 @@ async function removeInvoice(id){
 /* ---------- form binding ---------- */
 function fillForm(){
   $$("[data-f]").forEach(el=>{const v=cur[el.dataset.f];el.value=v==null?"":String(v)});
-  renderItemRows(); renderPayRows(); updateSavedLine();
+  renderItemRows(); renderPayRows(); updateSavedLine(); updateDocTypeUi(); fillClientList(); fillCatPick();
+}
+function updateDocTypeUi(){
+  if(!cur)return;
+  $("#efrisWrap").style.display=(cur.type==="tax"&&settings.efrisOn)?"":"none";
+  $("#againstWrap").style.display=cur.type==="credit"?"":"none";
+}
+function matchClient(v){
+  const c=clientStore.all().find(c=>(c.name||"").toLowerCase()===String(v).trim().toLowerCase());
+  cur.clientId=c?c.id:"";
+  if(c){
+    const a=$('[data-f="address"]'),t=$('[data-f="contact"]');
+    if(!a.value&&c.address){cur.address=c.address;a.value=c.address}
+    if(!t.value&&c.contact){cur.contact=c.contact;t.value=c.contact}
+  }
 }
 $$("[data-f]").forEach(el=>{
   const h=()=>{
@@ -617,7 +741,9 @@ $$("[data-f]").forEach(el=>{
     if(f==="discount")v=+v||0; if(f==="vat")v=+v;
     const prevType=cur.type; cur[f]=v;
     if(f==="status"&&v==="paid"&&!cur.paidDate)cur.paidDate=todayISO();
-    if(f==="type"&&cur.ref.includes("/"+TYPE[prevType].code+"/"))cur.ref=cur.ref.replace("/"+TYPE[prevType].code+"/","/"+TYPE[v].code+"/"),$('[data-f="ref"]').value=cur.ref;
+    if(f==="type"){if(cur.ref.includes("/"+TYPE[prevType].code+"/"))cur.ref=cur.ref.replace("/"+TYPE[prevType].code+"/","/"+TYPE[v].code+"/"),$('[data-f="ref"]').value=cur.ref;updateDocTypeUi()}
+    if(f==="date"){if(!cur.dueDate){cur.dueDate=v;$('[data-f="dueDate"]').value=v}}
+    if(f==="client")matchClient(v);
     if(f==="dateFrom"||f==="dateTo")daysHint();
     changed();
   };
@@ -650,14 +776,17 @@ function renderPayRows(){
   cur.payments=cur.payments||[];
   $("#payRows").innerHTML=cur.payments.map((p,k)=>`<div class="pay" data-k="${k}">
     <label>Description<input data-p="l" value="${esc(p.l)}" placeholder="Down payment"></label>
+    <label>Method<select data-p="m">${["","Cash","Bank","Mobile money","Cheque"].map(m=>`<option value="${m}"${p.m===m?" selected":""}>${m||"—"}</option>`).join("")}</select></label>
     <label>Amount (UGX)<input type="number" min="0" step="any" data-p="a" value="${p.a||""}" placeholder="0"></label>
     <label>Date paid<input type="date" data-p="dt" value="${esc(p.dt)}"></label>
+    <span class="rcptcell"><button class="btn sm" data-rcpt="${k}" title="Print a receipt for this payment">Receipt</button></span>
     <button class="xbtn" data-rmp="${k}" title="Remove payment" aria-label="Remove payment">×</button></div>`).join("");
-  $$("#payRows input").forEach(inp=>{const h=()=>{
+  $$("#payRows input,#payRows select").forEach(inp=>{const h=()=>{
     const row=inp.closest(".pay"),p=cur.payments[+row.dataset.k],f=inp.dataset.p;
     p[f]=f==="a"?(inp.value===""?"":+inp.value):inp.value; changed()};
     inp.addEventListener("input",h);inp.addEventListener("change",h)});
   $$("[data-rmp]").forEach(b=>b.onclick=()=>{cur.payments.splice(+b.dataset.rmp,1);renderPayRows();changed()});
+  $$("[data-rcpt]").forEach(b=>b.onclick=()=>{flushNow();printReceipt(cur,+b.dataset.rcpt)});
   $("#btnAddPay").textContent=cur.payments.length?"+ Add another payment":"+ Add down payment";
 }
 $("#btnAddPay").onclick=()=>{
@@ -689,12 +818,18 @@ $("#btnSave").onclick=async()=>{
   const done=["browser"];
   if(folderHandle){try{if(await saveFolder(cur)){done.push("PC folder")}}catch(e){toast("PC folder: "+e.message,"err")}}
   if(ghReady()&&settings.gh.auto){try{await ghPush(cur);done.push("GitHub")}catch(e){toast("GitHub: "+e.message,"err")}}
-  updateSavedLine(); toast("Saved to "+done.join(", "));
+  updateSavedLine();
+  const cname=(cur.client||"").trim();
+  if(cname&&!clientStore.all().some(c=>(c.name||"").toLowerCase()===cname.toLowerCase())&&confirm(`Save “${cname}” to your client list for future invoices?`)){
+    clientStore.put({id:"cli_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:cname,address:cur.address||"",contact:cur.contact||"",updated:Date.now()});
+    syncExp();fillClientList();
+  }
+  toast("Saved to "+done.join(", "));
   if(!folderHandle&&!(ghReady()&&settings.gh.auto))toast("Tip: link a PC folder or set up GitHub for extra copies");
 };
 $("#btnDownload").onclick=()=>{flushNow();download(fileOf(cur),stripped(cur))};
 function download(name,text,type="application/json"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
-$("#btnPrint").onclick=()=>{flushNow();const t=document.title;document.title=safeName(cur.ref)+(cur.client?" - "+safeName(cur.client):"");setTimeout(()=>{print();document.title=t},50)};
+$("#btnPrint").onclick=()=>{flushNow();printDoc(renderPaper(cur))};
 $("#btnBack").onclick=()=>{flushNow();show("library")};
 
 /* ================= local PC folder (File System Access API) ================= */
@@ -746,13 +881,15 @@ async function importFiles(files){
         const ex=invoices[inv.id];
         if(!ex){invoices[inv.id]=inv;added++}else if((inv.updated||0)>(ex.updated||0)){invoices[inv.id]=inv;updated++}else skipped++;
       }
+      if(Array.isArray(data.clients))clientStore.merge({clients:data.clients,deleted:data.clients_deleted||{}});
+      if(Array.isArray(data.catalog))catalogStore.merge({catalog:data.catalog,deleted:data.catalog_deleted||{}});
     }catch(e){skipped++}
   }
   persist();renderLibrary();toast(`Import: ${added} new, ${updated} updated, ${skipped} skipped`+(expAdded?`, ${expAdded} expenses`:""));
 }
 $("#btnExport").onclick=()=>{
   const s=JSON.parse(JSON.stringify(settings));s.gh.token="";
-  download("stereo1-backup-"+todayISO()+".json",JSON.stringify({exported:new Date().toISOString(),settings:s,invoices:Object.values(invoices),expenses:Object.values(expenses),deleted:expDel},null,2));
+  download("stereo1-backup-"+todayISO()+".json",JSON.stringify({exported:new Date().toISOString(),settings:s,invoices:Object.values(invoices),expenses:Object.values(expenses),deleted:expDel,clients:clientStore.all(),clients_deleted:clientStore.del,catalog:catalogStore.all(),catalog_deleted:catalogStore.del},null,2));
 };
 
 /* ================= GitHub ================= */
@@ -800,6 +937,8 @@ async function ghSyncAll(){
   }
   for(const inv of Object.values(invoices)){if(!seen.has(inv.id)){await ghPush(inv);pushed++}}
   await ghPushExp();
+  await ghPushStore(clientStore,ghFolderPath()+"_clients.json","Update clients");
+  await ghPushStore(catalogStore,ghFolderPath()+"_catalog.json","Update price list");
   persist();return {pulled,pushed};
 }
 $("#btnSync").onclick=async()=>{
@@ -827,6 +966,15 @@ function mergeExp(r){
   persistExp();return ch;
 }
 const expPath=()=>{const f=(settings.gh.folder||"").replace(/^\/+|\/+$/g,"");return (f?f+"/":"")+"_expenses.json"};
+const ghFolderPath=()=>{const f=(settings.gh.folder||"").replace(/^\/+|\/+$/g,"");return (f?f+"/":"")};
+async function ghPushStore(store,path,msg){
+  const ex=await gh(path,{query:ghRef()});
+  if(ex){try{store.merge(JSON.parse(unb64(ex.content)))}catch(e){}}
+  const body={message:msg,content:b64(store.json()),branch:settings.gh.branch||"main"};
+  if(ex)body.sha=ex.sha;
+  const r=await gh(path,{method:"PUT",body});
+  if(!r)throw new Error("Repository or branch not found");
+}
 async function ghPushExp(){
   const path=expPath(),ex=await gh(path,{query:ghRef()});
   if(ex){try{mergeExp(JSON.parse(unb64(ex.content)))}catch(e){}}
@@ -841,8 +989,19 @@ async function saveFolderExp(){
   const w=await fh.createWritable();await w.write(expJson());await w.close();return true;
 }
 async function syncExp(){
-  if(folderHandle){try{await saveFolderExp()}catch(e){toast("PC folder: "+e.message,"err")}}
-  if(ghReady()&&settings.gh.auto){try{await ghPushExp()}catch(e){toast("GitHub: "+e.message,"err")}}
+  if(folderHandle){
+    try{
+      await saveFolderExp();
+      for(const [store,name] of [[clientStore,"_clients.json"],[catalogStore,"_catalog.json"]]){
+        const fh=await folderHandle.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(store.json());await w.close();
+      }
+    }catch(e){toast("PC folder: "+e.message,"err")}
+  }
+  if(ghReady()&&settings.gh.auto){
+    for(const [fn,label] of [[ghPushExp,"expenses"],[()=>ghPushStore(clientStore,ghFolderPath()+"_clients.json","Update clients"),"clients"],[()=>ghPushStore(catalogStore,ghFolderPath()+"_catalog.json","Update price list"),"price list"]]){
+      try{await fn()}catch(e){toast("GitHub ("+label+"): "+e.message,"err")}
+    }
+  }
 }
 function fillExpSelects(){
   const keep=$("#xCat").value;
@@ -897,9 +1056,105 @@ function renderExpenses(){
 }
 ["#xQ","#xCat","#xFrom","#xTo"].forEach(id=>{$(id).addEventListener("input",renderExpenses);$(id).addEventListener("change",renderExpenses)});
 
+/* ================= clients & price list ================= */
+function makeStore(key,arrKey){
+  const data=LS.get(key,{}),del=LS.get(key+"_deleted",{});
+  const persist=()=>{LS.set(key,data);LS.set(key+"_deleted",del)};
+  return {
+    data,del,persist,
+    all(){return Object.values(data)},
+    get(id){return data[id]},
+    put(e){data[e.id]=e;delete del[e.id];persist()},
+    remove(id){delete data[id];del[id]=Date.now();persist()},
+    json(){return JSON.stringify({[arrKey]:Object.values(data),deleted:del},null,2)},
+    merge(r){let ch=false;
+      for(const [id,t] of Object.entries(r.deleted||{})){if(!del[id]||del[id]<t){del[id]=t;ch=true}}
+      for(const e of (r[arrKey]||[])){if(!e||!e.id)continue;const l=data[e.id];if(!l||(e.updated||0)>(l.updated||0)){data[e.id]=e;ch=true}}
+      for(const [id,t] of Object.entries(del)){const l=data[id];if(l&&(l.updated||0)<=t){delete data[id];ch=true}}
+      persist();return ch;
+    }
+  };
+}
+const clientStore=makeStore("s1_clients","clients"),catalogStore=makeStore("s1_catalog","catalog");
+const DEFAULT_SERVICES=["PA SOUND SYSTEM","LINE ARRAY SPEAKERS","DIGITAL MIXER","WIRELESS MICROPHONES","MOVING HEAD LIGHTS","STAGE LIGHTING","STAGE 8M X 6M","DJ SET (CONSOLE & DJ)","LIVE BAND BACKLINE","LIVE STREAM AUDIO","SOUND ENGINEER","GENERATOR"];
+let editingClient=null;
+function fillClientList(){
+  const sorted=clientStore.all().sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  const cl=$("#clientList");if(cl)cl.innerHTML=sorted.map(c=>`<option value="${esc(c.name)}">`).join("");
+  const st=$("#stClient");if(st){const keep=st.value;st.innerHTML=`<option value="">Choose client…</option>`+sorted.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");if(keep)st.value=keep}
+}
+function clientOutstanding(c){
+  return Object.values(invoices).filter(i=>i.status==="sent"&&i.type!=="credit"&&(i.clientId===c.id||i.client===c.name)).reduce((s,i)=>s+calc(i).bal,0);
+}
+function renderClients(){
+  const q=$("#cQ").value.trim().toLowerCase();
+  const list=clientStore.all().sort((a,b)=>(a.name||"").localeCompare(b.name||"")).filter(c=>!q||[c.name,c.contact,c.phone,c.email,c.tin,c.address].join(" ").toLowerCase().includes(q));
+  $("#cliStats").innerHTML=`<div class="stat"><b>${list.length}</b><span>Clients shown</span></div>
+    <div class="stat"><b>UGX ${money(list.reduce((s,c)=>s+clientOutstanding(c),0))}</b><span>Outstanding across shown clients</span></div>`;
+  if(!list.length){$("#cliList").innerHTML=`<div class="empty">${clientStore.all().length?"No clients match your search.":"No clients yet. Add your first one above — it will then autocomplete in the invoice editor."}</div>`;return}
+  $("#cliList").innerHTML=`<table class="list"><thead><tr><th>Client</th><th class="hide-sm">Contact</th><th class="hide-sm">Phone / email</th><th class="hide-sm">TIN</th><th class="num">Outstanding (UGX)</th><th></th></tr></thead><tbody>`+
+  list.map(c=>`<tr><td><b>${esc(c.name)}</b>${c.address?`<div class="where">${esc(c.address)}</div>`:""}</td><td class="hide-sm">${esc(c.contact)}</td><td class="hide-sm where">${esc([c.phone,c.email].filter(Boolean).join(" · "))}</td><td class="hide-sm">${esc(c.tin)}</td><td class="num balcell">${money(clientOutstanding(c))}</td>
+    <td style="white-space:nowrap;text-align:right"><button class="btn sm" data-cst="${c.id}">Statement</button> <button class="btn sm" data-ce="${c.id}">Edit</button> <button class="btn sm danger" data-cd="${c.id}">Delete</button></td></tr>`).join("")+`</tbody></table>`;
+  $$('[data-cst]').forEach(b=>b.onclick=()=>{$("#stClient").value=b.dataset.cst;show("reports");previewStatement()});
+  $$('[data-ce]').forEach(b=>b.onclick=()=>{
+    const c=clientStore.get(b.dataset.ce);editingClient=c.id;
+    $("#cName").value=c.name||"";$("#cContact").value=c.contact||"";$("#cPhone").value=c.phone||"";$("#cAddress").value=c.address||"";$("#cTin").value=c.tin||"";$("#cEmail").value=c.email||"";$("#cNotes").value=c.notes||"";
+    $("#cTitle").textContent="Edit client";$("#cSave").textContent="Save changes";$("#cCancel").style.display="";scrollTo(0,0);
+  });
+  $$('[data-cd]').forEach(b=>b.onclick=()=>{
+    const c=clientStore.get(b.dataset.cd);if(!confirm(`Delete client ${c.name}?\n\nInvoices already issued keep their client name.`))return;
+    clientStore.remove(c.id);if(editingClient===c.id)resetClientForm();syncExp();renderClients();fillClientList();
+  });
+}
+function resetClientForm(){
+  editingClient=null;["cName","cContact","cPhone","cAddress","cTin","cEmail","cNotes"].forEach(id=>$("#"+id).value="");
+  $("#cTitle").textContent="Add client";$("#cSave").textContent="Add client";$("#cCancel").style.display="none";
+}
+$("#cSave").onclick=()=>{
+  const name=$("#cName").value.trim();
+  if(!name){toast("Enter a client name","err");return}
+  const id=editingClient||"cli_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),was=!!editingClient;
+  clientStore.put({id,name,contact:$("#cContact").value.trim(),phone:$("#cPhone").value.trim(),address:$("#cAddress").value.trim(),tin:$("#cTin").value.trim(),email:$("#cEmail").value.trim(),notes:$("#cNotes").value.trim(),updated:Date.now()});
+  syncExp();resetClientForm();renderClients();fillClientList();toast(was?"Client updated":"Client added");
+};
+$("#cCancel").onclick=resetClientForm;
+$("#cQ").addEventListener("input",renderClients);
+$("#btnClientsCsv").onclick=()=>{
+  downloadCsv("clients-"+todayISO()+".csv",[["Client","Contact","Phone","Email","Address","TIN","Notes","Outstanding (UGX)"],
+    ...clientStore.all().sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(c=>[c.name,c.contact,c.phone,c.email,c.address,c.tin,c.notes,clientOutstanding(c)])]);
+};
+function fillCatalog(){
+  const all=catalogStore.all().sort((a,b)=>(a.d||"").localeCompare(b.d||""));
+  const host=$("#catRows");
+  if(host){
+    host.innerHTML=all.length?all.map(c=>`<div class="cat-row" data-id="${c.id}"><input value="${esc(c.d)}" data-cf="d" placeholder="item"><input value="${esc(c.u||"")}" data-cf="u" placeholder="unit"><input type="number" min="0" step="any" value="${c.p||""}" data-cf="p" placeholder="price (UGX)"><button class="btn sm" data-csave="${c.id}">Save</button><button class="xbtn" data-cx="${c.id}" title="Remove" aria-label="Remove">×</button></div>`).join(""):`<div class="note" style="padding:4px 0">No price-list items yet — add your standard sound, lighting and staging items below.</div>`;
+    $$('[data-csave]').forEach(b=>b.onclick=()=>{const row=b.closest(".cat-row"),c=catalogStore.get(b.dataset.csave);c.d=row.querySelector('[data-cf="d"]').value.trim();c.u=row.querySelector('[data-cf="u"]').value.trim();c.p=+row.querySelector('[data-cf="p"]').value||0;c.updated=Date.now();catalogStore.put(c);syncExp();fillCatalog();toast("Price list updated")});
+    $$('[data-cx]').forEach(b=>b.onclick=()=>{if(!confirm("Remove this item from the price list?"))return;catalogStore.remove(b.dataset.cx);syncExp();fillCatalog()});
+  }
+  fillCatPick();
+}
+function fillCatPick(){
+  const el=$("#catPick");if(!el)return;
+  const all=catalogStore.all().sort((a,b)=>(a.d||"").localeCompare(b.d||""));
+  el.innerHTML=`<option value="">From price list…</option>`+all.map(c=>`<option value="${c.id}">${esc(c.d)}${c.p?" – UGX "+money(c.p):""}</option>`).join("");
+  const sv=$("#svcList");if(sv)sv.innerHTML=[...new Set([...all.map(c=>c.d).filter(Boolean),...DEFAULT_SERVICES])].map(d=>`<option value="${esc(d)}">`).join("");
+}
+$("#catAdd").onclick=()=>{
+  const d=$("#catD").value.trim();
+  if(!d){toast("Type the item name first","err");return}
+  catalogStore.put({id:"cat_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),d,u:$("#catU").value.trim(),p:+$("#catP").value||0,updated:Date.now()});
+  $("#catD").value="";$("#catU").value="";$("#catP").value="";
+  syncExp();fillCatalog();toast("Added to price list");
+};
+$("#catPick").onchange=()=>{
+  const c=catalogStore.get($("#catPick").value);if(!c||!cur)return;
+  cur.items.push({d:c.d,q:1,days:eventDays(cur)||1,p:c.p||0});
+  $("#catPick").value="";renderItemRows();changed();
+};
+
 /* ================= dashboard ================= */
 function receipts(inv){            // money actually received for an invoice: [{d,a}]
-  if(inv.status==="cancelled")return [];
+  if(inv.status==="cancelled"||inv.type==="credit")return [];
   const c=calc(inv),out=[];
   (inv.payments||[]).forEach(p=>{if(+p.a>0)out.push({d:p.dt||inv.date,a:+p.a})});
   if(inv.status==="paid"&&c.due>c.paid)out.push({d:inv.paidDate||inv.date,a:c.due-c.paid});
@@ -922,11 +1177,12 @@ function renderDashboard(){
   let rec=0,recVat=0,invoiced=0,out=0;const months={};
   const bump=(d,k,v)=>{const m=(d||"").slice(0,7);if(!m)return;(months[m]=months[m]||{rev:0,exp:0})[k]+=v};
   invs.forEach(i=>{
-    const c=calc(i),f=c.due>0?c.total/c.due:1;
-    if(i.status!=="draft"&&inRange(i.date,from,to))invoiced+=c.total;
-    if(i.status==="sent")out+=c.bal;
+    const c=calc(i),f=c.due>0?c.total/c.due:1,sgn=i.type==="credit"?-1:1;
+    if(i.status!=="draft"&&inRange(i.date,from,to))invoiced+=sgn*c.total;
+    if(i.status==="sent")out+=sgn*c.bal;
     receipts(i).forEach(r=>{if(!inRange(r.d,from,to))return;rec+=r.a;recVat+=r.a*(1-f);bump(r.d,"rev",r.a*f)});
   });
+  Object.values(invoices).filter(i=>i.type==="credit"&&i.status==="sent"&&inRange(i.date,from,to)).forEach(i=>{const c=calc(i);rec-=c.due;recVat-=c.vat;bump(i.date,"rev",-c.total)});
   const exps=Object.values(expenses).filter(e=>inRange(e.date,from,to));
   exps.forEach(e=>bump(e.date,"exp",e.amt));
   const expTotal=exps.reduce((s,e)=>s+e.amt,0),labor=exps.filter(e=>isLabor(e.cat)).reduce((s,e)=>s+e.amt,0);
@@ -947,31 +1203,262 @@ function renderDashboard(){
   $("#dCats").innerHTML=ck.length?ck.map(k=>`<div class="crow"><div class="top"><span>${esc(k)}</span><span><b>${money(cats[k])}</b> <span class="where">${Math.round(cats[k]/expTotal*100)}%</span></span></div><div class="bar" style="width:${cats[k]/cats[ck[0]]*100}%"></div></div>`).join(""):`<div class="note">No expenses in this period.</div>`;
   // per event (all dates)
   const all=Object.values(expenses);
-  const rows=invs.map(i=>{
+  const rows=invs.filter(i=>i.type!=="credit").map(i=>{
     const c=calc(i),f=c.due>0?c.total/c.due:1,recNet=receipts(i).reduce((s,r)=>s+r.a*f,0);
     const ex=all.filter(e=>e.inv===i.id),lab=ex.filter(e=>isLabor(e.cat)).reduce((s,e)=>s+e.amt,0),oth=ex.reduce((s,e)=>s+e.amt,0)-lab;
-    return {i,c,recNet,lab,oth,profit:recNet-lab-oth,proj:c.total-lab-oth};
+    return {i,c,recNet,invoiced:c.total,lab,oth,profit:recNet-lab-oth,proj:c.total-lab-oth};
   }).filter(r=>r.i.status!=="draft"||r.recNet||r.lab||r.oth).sort((a,b)=>(b.i.date||"").localeCompare(a.i.date||""));
+  Object.values(invoices).filter(i=>i.type==="credit"&&i.status!=="draft").forEach(cn=>{
+    const c=calc(cn),ex=all.filter(e=>e.inv===cn.id),oth=ex.reduce((s,e)=>s+e.amt,0);
+    const host=cn.againstRef?rows.find(r=>r.i.ref===cn.againstRef):null;
+    if(host){host.invoiced-=c.total;host.proj-=c.total}
+    else rows.push({i:cn,c,recNet:0,invoiced:-c.total,lab:0,oth,profit:-c.total-oth,proj:-c.total-oth});
+  });
   const listed=new Set(rows.map(r=>r.i.id)),oh=all.filter(e=>!listed.has(e.inv)),ohT=oh.reduce((s,e)=>s+e.amt,0);
   $("#dEvents").innerHTML=rows.length||ohT?`<table class="list"><thead><tr><th>Invoice / event</th><th class="num">Invoiced</th><th class="num">Received</th><th class="num">Labor</th><th class="num">Other costs</th><th class="num">Profit so far</th><th class="num">Profit if fully paid</th></tr></thead><tbody>`+
-    rows.map(r=>`<tr><td><b>${esc(r.i.ref)}</b> <span class="badge ${r.i.status}">${r.i.status}</span><div class="where">${esc([r.i.client,r.i.event].filter(Boolean).join(" – "))}</div></td><td class="num">${money(r.c.total)}</td><td class="num">${money(r.recNet)}</td><td class="num">${money(r.lab)}</td><td class="num">${money(r.oth)}</td><td class="num"><b>${pc(r.profit)}</b></td><td class="num">${pc(r.proj)}</td></tr>`).join("")+
+    rows.map(r=>`<tr><td><b>${esc(r.i.ref)}</b> <span class="badge ${r.i.status}">${r.i.status}</span><div class="where">${esc([r.i.client,r.i.event].filter(Boolean).join(" – "))}</div></td><td class="num">${money(r.invoiced)}</td><td class="num">${money(r.recNet)}</td><td class="num">${money(r.lab)}</td><td class="num">${money(r.oth)}</td><td class="num"><b>${pc(r.profit)}</b></td><td class="num">${pc(r.proj)}</td></tr>`).join("")+
     (ohT?`<tr><td><b>General / overhead</b><div class="where">Costs not charged to a specific event (incl. cancelled jobs)</div></td><td class="num">—</td><td class="num">—</td><td class="num">${money(oh.filter(e=>isLabor(e.cat)).reduce((s,e)=>s+e.amt,0))}</td><td class="num">${money(oh.filter(e=>!isLabor(e.cat)).reduce((s,e)=>s+e.amt,0))}</td><td class="num"><b>${pc(-ohT)}</b></td><td class="num">${pc(-ohT)}</td></tr>`:"")+`</tbody></table><p class="note" style="margin:8px 0 0">All amounts in UGX, excluding VAT.</p>`
     :`<div class="empty">Send an invoice and record some expenses to see profit per event.</div>`;
 }
 ["#dPeriod","#dFrom","#dTo"].forEach(id=>{$(id).addEventListener("input",renderDashboard);$(id).addEventListener("change",renderDashboard)});
 
+/* ================= shared helpers: CSV, words, printing ================= */
+function downloadCsv(name,rows){
+  const q=v=>{v=String(v==null?"":v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  download(name,"\ufeff"+rows.map(r=>r.map(q).join(",")).join("\r\n"),"text/csv");
+}
+function words(n){
+  n=Math.round(+n||0);
+  if(n===0)return "zero";
+  const ones=["","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"],
+    tens=["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+  const chunk=x=>{let s="";if(x>=100){s=ones[Math.floor(x/100)]+" hundred";x%=100;if(x)s+=" "}
+    if(x>=20){s+=tens[Math.floor(x/10)];if(x%10)s+=" "+ones[x%10]}else if(x>0)s+=(s?" ":"")+ones[x];return s};
+  let out="";
+  for(const [name,v] of [["billion",1e9],["million",1e6],["thousand",1e3],["",1]]){
+    if(n>=v){const q=Math.floor(n/v);out+=(out?" ":"")+chunk(q)+(name?" "+name:"");n%=v}}
+  return out.trim();
+}
+const ugxWords=n=>("Uganda Shillings "+words(n)+" only").replace(/\b\w/g,c=>c.toUpperCase());
+function printDoc(html){$("#printHost").innerHTML=`<div class="paper">${html}</div>`;setTimeout(()=>print(),60)}
+
+/* ================= receipts ================= */
+function makeRcptNo(){
+  const n=+settings.nextRcpt||1;settings.nextRcpt=n+1;saveSettings();
+  return `${settings.prefix||"STE"}/RCP/${todayISO().slice(2,4)}-${String(n).padStart(4,"0")}`;
+}
+function printReceipt(inv,k){
+  const p=(inv.payments||[])[k];
+  if(!p||!(+p.a>0)){toast("Nothing to receipt on that line","err");return}
+  if(!p.r){p.r=makeRcptNo();inv.updated=Date.now();flushNow()}
+  printDoc(renderReceipt(inv,p));
+}
+function renderReceipt(inv,p){
+  const c=calc(inv),s=settings;
+  const from=[`<b>${esc(s.name)}</b>`,...String(s.address).split("\n").filter(Boolean).map(esc),
+    s.tel&&"Tel: "+esc(s.tel),s.email&&esc(s.email),s.tin&&"TIN: "+esc(s.tin)].filter(Boolean).join("<br>");
+  return `
+  <div class="p-band"><img src="${logoSrc()}" alt="${esc(s.name)}"><h1>OFFICIAL<br>RECEIPT</h1></div>
+  <div class="p-top"><div class="p-from">${from}</div><div class="p-meta">
+    <div><span class="k">Receipt no:</span><span class="v strong">${esc(p.r)}</span></div>
+    <div><span class="k">Date:</span><span class="v">${fmtDate(p.dt||todayISO())}</span></div>
+    <div><span class="k">Received from:</span><span class="v strong">${esc(inv.client)}</span></div>
+    ${inv.contact?`<div><span class="k">Contact:</span><span class="v">${esc(inv.contact)}</span></div>`:""}
+    <div><span class="k">Being payment for:</span><span class="v">${esc(inv.ref)}${inv.event?" – "+esc(inv.event):""}</span></div>
+    <div><span class="k">Method:</span><span class="v">${esc(p.m||"—")}</span></div>
+  </div></div>
+  <div class="p-body">
+    <table class="p-items"><thead><tr><th>DESCRIPTION</th><th>AMOUNT (UGX)</th></tr></thead>
+    <tbody><tr><td style="text-align:left">${esc(p.l||"Payment")}</td><td><b>${money(p.a)}</b></td></tr></tbody></table>
+    <table class="p-tot">
+      <tr class="due"><td>AMOUNT RECEIVED</td><td>${money(p.a)}</td></tr>
+      <tr><td>BALANCE ON ${esc(inv.ref)}</td><td>${money(c.bal)}</td></tr>
+    </table>
+    <div class="p-sec" style="padding-left:0"><h4>AMOUNT IN WORDS</h4><div class="l">${esc(ugxWords(p.a))}</div></div>
+  </div>
+  <div class="p-sec" style="padding-top:6mm"><div class="p-stampzone">${settings.stamp?`<img class="p-stampimg" src="${settings.stamp}" alt="">`:""}<span class="p-stamp paid">RECEIVED</span></div></div>
+  <div class="p-spacer"></div>
+  <div class="p-foot"><span>Received with thanks. The balance on invoice ${esc(inv.ref)} remains due as per its terms.</span><span>${esc(s.name)}</span></div>`;
+}
+
+/* ================= aging & client statements ================= */
+function ageBucket(i){
+  const due=i.dueDate||i.date;
+  if(!due||due>=todayISO())return "current";
+  const days=Math.floor((Date.parse(todayISO())-Date.parse(due))/864e5);
+  return days<=30?"d30":days<=60?"d60":days<=90?"d90":"d90p";
+}
+function agingData(){
+  const map={};
+  for(const i of Object.values(invoices)){
+    if(i.type==="credit"||i.status!=="sent")continue;
+    const c=calc(i);if(c.bal<=0)continue;
+    const cl=i.clientId&&clientStore.get(i.clientId);
+    const key=cl?cl.name:(i.client||"(no client)");
+    const m=map[key]=map[key]||{current:0,d30:0,d60:0,d90:0,d90p:0,total:0};
+    m[ageBucket(i)]+=c.bal;m.total+=c.bal;
+  }
+  for(const i of Object.values(invoices)){          // credit notes reduce what the client owes
+    if(i.type!=="credit"||i.status!=="sent")continue;
+    const c=calc(i);if(c.bal<=0)continue;
+    const cl=i.clientId&&clientStore.get(i.clientId);
+    const key=cl?cl.name:(i.client||"(no client)");
+    const m=map[key];if(!m)continue;
+    const host=i.againstRef&&Object.values(invoices).find(x=>x.ref===i.againstRef&&x.type!=="credit"&&x.status==="sent");
+    const b=host?ageBucket(host):"current";
+    m[b]-=c.bal;m.total-=c.bal;
+  }
+  return map;
+}
+function statementHtml(c){
+  const s=settings;
+  const list=Object.values(invoices).filter(i=>i.status!=="draft"&&i.status!=="cancelled"&&(i.clientId===c.id||i.client===c.name))
+    .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  let bal=0;const rows=[];
+  for(const i of list){
+    const ca=calc(i);
+    if(i.type==="credit"){bal-=ca.due;rows.push([fmtDate(i.date),i.ref,"Credit note"+(i.againstRef?" – "+i.againstRef:""),"",money(ca.due),money(bal)]);continue}
+    bal+=ca.due;rows.push([fmtDate(i.date),i.ref,i.event||"Invoice",money(ca.due),"",money(bal)]);
+    for(const p of (i.payments||[]).filter(p=>+p.a>0)){bal-=+p.a;rows.push([fmtDate(p.dt||i.date),i.ref,"Payment"+(p.m?" – "+p.m:"")+(p.l?" – "+p.l:""),"",money(+p.a),money(bal)])}
+    if(i.status==="paid"&&ca.due>ca.paid){const a=ca.due-ca.paid;bal-=a;rows.push([fmtDate(i.paidDate||i.date),i.ref,"Payment – balance cleared","",money(a),money(bal)])}
+  }
+  const ag=agingData()[c.name]||{current:0,d30:0,d60:0,d90:0,d90p:0,total:0};
+  const from=[`<b>${esc(s.name)}</b>`,...String(s.address).split("\n").filter(Boolean).map(esc),
+    s.tel&&"Tel: "+esc(s.tel),s.email&&esc(s.email),s.tin&&"TIN: "+esc(s.tin)].filter(Boolean).join("<br>");
+  return `
+  <div class="p-band"><img src="${logoSrc()}" alt="${esc(s.name)}"><h1>STATEMENT<br>OF ACCOUNT</h1></div>
+  <div class="p-top"><div class="p-from">${from}</div><div class="p-meta">
+    <div><span class="k">Client:</span><span class="v strong">${esc(c.name)}</span></div>
+    ${c.address?`<div><span class="k">Address:</span><span class="v">${esc(c.address)}</span></div>`:""}
+    ${c.contact?`<div><span class="k">Contact:</span><span class="v">${esc(c.contact)}</span></div>`:""}
+    <div><span class="k">As of:</span><span class="v">${fmtDate(todayISO())}</span></div>
+  </div></div>
+  <div class="p-body">
+    <table class="p-items"><thead><tr><th>DATE</th><th>REFERENCE</th><th>DESCRIPTION</th><th>DEBIT (UGX)</th><th>CREDIT (UGX)</th><th>BALANCE (UGX)</th></tr></thead><tbody>
+    ${rows.length?rows.map(r=>`<tr><td style="text-align:left">${r[0]}</td><td style="text-align:left">${esc(r[1])}</td><td style="text-align:left">${esc(r[2])}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td></tr>`).join(""):`<tr><td colspan="6" style="color:#999;text-align:left">No transactions on record.</td></tr>`}
+    </tbody></table>
+    <table class="p-tot">
+      <tr class="${bal>0?"due":"pd"}"><td>BALANCE OWED</td><td>${money(Math.max(0,bal))}</td></tr>
+      ${ag.total?`<tr><td>Not yet due</td><td>${money(ag.current)}</td></tr>
+      <tr><td>1–30 days overdue</td><td>${money(ag.d30)}</td></tr>
+      <tr><td>31–60 days overdue</td><td>${money(ag.d60)}</td></tr>
+      <tr><td>61–90 days overdue</td><td>${money(ag.d90)}</td></tr>
+      <tr><td>Over 90 days overdue</td><td>${money(ag.d90p)}</td></tr>`:""}
+    </table>
+  </div>
+  <div class="p-spacer"></div>
+  <div class="p-foot"><span>${esc(s.footer)}</span><span>Page 1 of 1</span></div>`;
+}
+let stHtml="";
+function previewStatement(){
+  const c=clientStore.get($("#stClient").value);
+  const p=$("#stPaper");
+  if(!c){p.style.display="none";$("#btnStatementPrint").style.display="none";return}
+  stHtml=statementHtml(c);
+  p.style.display="";p.innerHTML=stHtml;fitSt();
+  $("#btnStatementPrint").style.display="";
+}
+function fitSt(){
+  const p=$("#stPaper"),w=$("#stWrap");
+  if(!p||p.style.display==="none"||!w)return;
+  p.style.zoom=1;const z=Math.min(1,(w.clientWidth-4)/p.offsetWidth);p.style.zoom=z;
+}
+$("#btnStatement").onclick=previewStatement;
+$("#btnStatementPrint").onclick=()=>printDoc(stHtml);
+$("#stClient").addEventListener("change",previewStatement);
+
+/* ================= reports ================= */
+function initReports(){
+  if(!$("#rFrom").value){$("#rFrom").value=todayISO().slice(0,8)+"01";$("#rTo").value=todayISO()}
+  fillClientList();
+}
+function agingTableData(){
+  const ag=agingData();
+  return [["Client","Not yet due","1-30 days","31-60 days","61-90 days","90+ days","Total (UGX)"],
+    ...Object.keys(ag).sort().map(k=>[k,ag[k].current,ag[k].d30,ag[k].d60,ag[k].d90,ag[k].d90p,ag[k].total])];
+}
+function vatTableData(from,to){
+  const rows=[["Date","Reference","Client","Type","Net (UGX)","VAT (UGX)"]];let vVat=0;
+  Object.values(invoices).filter(i=>["tax","credit"].includes(i.type)&&i.status!=="draft"&&i.status!=="cancelled"&&inRange(i.date,from,to))
+    .sort((a,b)=>(a.date||"").localeCompare(b.date||""))
+    .forEach(i=>{const c=calc(i),sgn=i.type==="credit"?-1:1;vVat+=sgn*c.vat;rows.push([i.date,i.ref,i.client,i.type==="credit"?"credit note":"tax invoice",sgn*c.total,sgn*c.vat])});
+  rows.push(["","","","","Net VAT payable",vVat]);
+  return rows;
+}
+function pnlTableData(from,to){
+  let rec=0,recVat=0,crNet=0,crVat=0;
+  Object.values(invoices).filter(i=>i.status!=="cancelled"&&i.type!=="credit").forEach(i=>{
+    const c=calc(i),f=c.due>0?c.total/c.due:1;
+    receipts(i).forEach(r=>{if(inRange(r.d,from,to)){rec+=r.a;recVat+=r.a*(1-f)}});
+  });
+  Object.values(invoices).filter(i=>i.type==="credit"&&i.status==="sent"&&inRange(i.date,from,to)).forEach(i=>{const c=calc(i);crNet+=c.total;crVat+=c.vat});
+  const exps=Object.values(expenses).filter(e=>inRange(e.date,from,to)),expTotal=exps.reduce((s,e)=>s+e.amt,0);
+  const netRev=rec-recVat-crNet,profit=netRev-expTotal;
+  const rows=[["INCOME",""],
+    ["Money received from clients (incl. VAT)",rec],
+    ["VAT inside those receipts",-recVat],
+    ["Credit notes issued (net of VAT)",-crNet],
+    ["Revenue for the period (excl. VAT)",netRev],
+    ["EXPENSES",""]];
+  const byCat={};exps.forEach(e=>byCat[e.cat]=(byCat[e.cat]||0)+e.amt);
+  Object.keys(byCat).sort((a,b)=>byCat[b]-byCat[a]).forEach(k=>rows.push([k,-byCat[k]]));
+  rows.push(["Total expenses",-expTotal],["NET PROFIT",profit],["(memo) VAT collected net of credit notes",recVat-crVat]);
+  return rows;
+}
+function payTableData(from,to){
+  const rows=[["Date","Invoice","Client","Method","Amount (UGX)"]];
+  Object.values(invoices).filter(i=>i.status!=="cancelled"&&i.type!=="credit").forEach(i=>{
+    receipts(i).forEach(r=>{if(inRange(r.d,from,to)){
+      const p=(i.payments||[]).find(p=>p.dt===r.d&&+p.a===r.a);
+      rows.push([r.d,i.ref,i.client,(p&&p.m)||"",r.a]);
+    }});
+  });
+  rows.sort((a,b)=>String(b[0]).localeCompare(String(a[0])));
+  return rows;
+}
+function renderReports(){
+  const from=$("#rFrom").value,to=$("#rTo").value;
+  const ag=agingData(),keys=Object.keys(ag).sort();
+  const cols=[["current","Not yet due"],["d30","1–30 days"],["d60","31–60 days"],["d90","61–90 days"],["d90p","90+ days"]];
+  const tot={current:0,d30:0,d60:0,d90:0,d90p:0,total:0};keys.forEach(k=>cols.forEach(([c2])=>tot[c2]+=ag[k][c2]));
+  $("#rAging").innerHTML=keys.length?`<table class="list"><thead><tr><th>Client</th>${cols.map(([,l])=>`<th class="num">${l}</th>`).join("")}<th class="num">Total</th></tr></thead><tbody>`+
+    keys.map(k=>`<tr><td><b>${esc(k)}</b></td>${cols.map(([c2])=>`<td class="num">${ag[k][c2]?money(ag[k][c2]):"–"}</td>`).join("")}<td class="num balcell">${money(ag[k].total)}</td></tr>`).join("")+
+    `<tr><td><b>Total</b></td>${cols.map(([c2])=>`<td class="num"><b>${money(tot[c2])}</b></td>`).join("")}<td class="num balcell">${money(tot.total)}</td></tr></tbody></table>`
+    :`<div class="empty">Nothing outstanding — every sent invoice is fully settled.</div>`;
+  const vall=vatTableData(from,to),vrows=vall.slice(1,-1);
+  $("#rVat").innerHTML=vrows.length?`<table class="list"><thead><tr><th>Date</th><th>Reference</th><th class="hide-sm">Client</th><th>Type</th><th class="num">Net (UGX)</th><th class="num">VAT (UGX)</th></tr></thead><tbody>`+
+    vrows.map(r=>`<tr><td>${fmtDate(r[0])}</td><td><b>${esc(r[1])}</b></td><td class="hide-sm">${esc(r[2])}</td><td><span class="badge ${r[3]==="credit note"?"credit":"sent"}">${r[3]}</span></td><td class="num">${r[4]<0?"-":""}${money(Math.abs(r[4]))}</td><td class="num"><b>${r[5]<0?"-":""}${money(Math.abs(r[5]))}</b></td></tr>`).join("")+
+    `</tbody><tfoot><tr><td colspan="5" style="text-align:right"><b>Net VAT payable for the period</b></td><td class="num balcell">${money(vall[vall.length-1][5])}</td></tr></tfoot></table>`
+    :`<div class="note">No tax invoices or credit notes are dated in this period.</div>`;
+  const pnl=pnlTableData(from,to);
+  $("#rPnl").innerHTML=`<table class="list"><tbody>`+pnl.map(([l,v])=>{
+    if(v==="")return `<tr><td colspan="2" style="background:#f7f8fb;font-weight:700;font-size:12px;color:var(--muted)">${esc(l)}</td></tr>`;
+    const strong=["Revenue for the period (excl. VAT)","NET PROFIT"].includes(l);
+    return `<tr><td>${strong?`<b>${esc(l)}</b>`:esc(l)}</td><td class="num${strong?" balcell":""}">${money(v)}</td></tr>`;
+  }).join("")+`</tbody></table>`;
+  const prows=payTableData(from,to).slice(1);
+  $("#rPays").innerHTML=prows.length?`<table class="list"><thead><tr><th>Date</th><th>Invoice</th><th class="hide-sm">Client</th><th>Method</th><th class="num">Amount (UGX)</th></tr></thead><tbody>`+
+    prows.map(r=>`<tr><td>${fmtDate(r[0])}</td><td><b>${esc(r[1])}</b></td><td class="hide-sm">${esc(r[2])}</td><td>${esc(r[3]||"—")}</td><td class="num">${money(r[4])}</td></tr>`).join("")+`</tbody></table>`
+    :`<div class="note">No payments were recorded in this period.</div>`;
+}
+$("#btnAgingCsv").onclick=()=>downloadCsv("aged-receivables-"+todayISO()+".csv",agingTableData());
+$("#btnVatCsv").onclick=()=>downloadCsv("vat-report-"+($("#rFrom").value||"start")+"-to-"+($("#rTo").value||todayISO())+".csv",vatTableData($("#rFrom").value,$("#rTo").value));
+$("#btnPnlCsv").onclick=()=>downloadCsv("income-statement-"+($("#rFrom").value||"start")+"-to-"+($("#rTo").value||todayISO())+".csv",pnlTableData($("#rFrom").value,$("#rTo").value));
+$("#btnPayCsv").onclick=()=>downloadCsv("payments-received-"+($("#rFrom").value||"start")+"-to-"+($("#rTo").value||todayISO())+".csv",payTableData($("#rFrom").value,$("#rTo").value));
+["#rFrom","#rTo"].forEach(id=>{$(id).addEventListener("input",renderReports);$(id).addEventListener("change",renderReports)});
+
 /* ================= settings view ================= */
 function fillSettings(){
-  $$("[data-s]").forEach(el=>el.value=settings[el.dataset.s]??"");
+  $$("[data-s]").forEach(el=>{if(el.type==="checkbox")el.checked=!!settings[el.dataset.s];else el.value=settings[el.dataset.s]??""});
   $$("[data-g]").forEach(el=>{const v=settings.gh[el.dataset.g];if(el.type==="checkbox")el.checked=!!v;else el.value=v??""});
   $("#logoPrev").src=logoSrc();
   const sp=$("#stampPrev");sp.style.display=settings.stamp?"":"none";if(settings.stamp)sp.src=settings.stamp;
-  refEx();
+  renderUsers();fillCatalog();refEx();
 }
 function refEx(){const p=$('[data-s="prefix"]').value||"STE",n=+$('[data-s="nextNo"]').value||1;$("#refEx").textContent=`${p}/PI/${String(new Date().getFullYear()).slice(2)}-${String(n).padStart(4,"0")}`}
 $('[data-s="prefix"]').oninput=$('[data-s="nextNo"]').oninput=refEx;
 $("#btnSaveSettings").onclick=()=>{
-  $$("[data-s]").forEach(el=>{const k=el.dataset.s;settings[k]=el.type==="number"?(+el.value||0):el.value});
+  $$("[data-s]").forEach(el=>{const k=el.dataset.s;settings[k]=el.type==="number"?(+el.value||0):(el.type==="checkbox"?el.checked:el.value)});
   $$("[data-g]").forEach(el=>{const k=el.dataset.g;settings.gh[k]=el.type==="checkbox"?el.checked:el.value.trim()});
   if(!settings.nextNo)settings.nextNo=1;
   if(saveSettings()){toast("Settings saved");renderChips()}
@@ -996,8 +1483,33 @@ $("#btnStamp").onclick=()=>$("#fileStamp").click();
 $("#fileStamp").onchange=async e=>{const f=e.target.files[0];if(!f)return;settings.stamp=await imgToDataURL(f,500);saveSettings();fillSettings();e.target.value=""};
 $("#btnStampClear").onclick=()=>{settings.stamp="";saveSettings();fillSettings()};
 
+/* ---------- users & passwords ---------- */
+function renderUsers(){
+  const host=$("#userRows");if(!host)return;
+  host.innerHTML=USERS.map((u,i)=>`<div class="pw"><span><b>${esc(u.u)}</b> <span class="where">${u.role==="admin"?"admin":"staff"}</span></span><input type="password" placeholder="new password" data-up="${i}" autocomplete="new-password"><button class="btn sm" data-uc="${i}">Set password</button>${session&&u.u===session.u?"":`<button class="btn sm danger" data-ux="${i}">Remove</button>`}</div>`).join("");
+  $$('[data-uc]').forEach(b=>b.onclick=async()=>{
+    const u=USERS[+b.dataset.uc],inp=$(`[data-up="${b.dataset.uc}"]`);
+    if(!inp.value){toast("Type the new password first","err");return}
+    if(inp.value.length<3){toast("Use at least 3 characters","err");return}
+    u.h=await sha256(inp.value);saveUsers();inp.value="";toast("Password updated for "+u.u);
+  });
+  $$('[data-ux]').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.ux,u=USERS[i];
+    if(u.role==="admin"&&USERS.filter(x=>x.role==="admin").length<=1){toast("Keep at least one admin account","err");return}
+    if(!confirm("Remove user "+u.u+"?"))return;
+    USERS.splice(i,1);saveUsers();renderUsers();toast("User removed");
+  });
+}
+$("#nuAdd").onclick=async()=>{
+  const name=$("#nuName").value.trim().toLowerCase(),pass=$("#nuPass").value;
+  if(!name||!pass){toast("Enter a username and password","err");return}
+  if(USERS.some(u=>u.u===name)){toast("That username already exists","err");return}
+  USERS.push({u:name,h:await sha256(pass),role:$("#nuRole").value,name:name});
+  saveUsers();renderUsers();$("#nuName").value="";$("#nuPass").value="";toast("User added");
+};
+
 /* ================= login ================= */
-const USERS=[
+const DEF_USERS=[
   {u:"admin",h:"a36aef5a11c4073fbe60314fc9df530a9d5f986533594d1f5190742ff9e0e408",role:"admin",name:"Administrator"},
   {u:"user1",h:"0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e",role:"user",name:"User 1"},
   {u:"user2",h:"6cf615d5bcaac778352a8f1f3360d23f02f34ec182e259897fd6ce485d7870d4",role:"user",name:"User 2"},
@@ -1005,6 +1517,8 @@ const USERS=[
   {u:"user4",h:"b97873a40f73abedd8d685a7cd5e5f85e4a9cfb83eac26886640a0813850122b",role:"user",name:"User 4"},
   {u:"user5",h:"8b2c86ea9cf2ea4eb517fd1e06b74f399e7fec0fef92e3b482a6cf2e2b092023",role:"user",name:"User 5"}
 ];
+let USERS=LS.get("s1_users",null)||JSON.parse(JSON.stringify(DEF_USERS));
+const saveUsers=()=>LS.set("s1_users",USERS);
 let session=null;
 const sha256=async s=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,"0")).join("");
 function applySession(){
@@ -1013,7 +1527,7 @@ function applySession(){
   $("#login").hidden=on;
   if(on){
     $("#who").innerHTML=`Signed in: <b>${esc(session.name)}</b>${session.role==="admin"?" (admin)":""}`;
-    $$(".topbar nav button").forEach(b=>{if(["settings","expenses","dashboard"].includes(b.dataset.view))b.style.display=session.role==="admin"?"":"none"});
+    $$(".topbar nav button").forEach(b=>{if(["settings","expenses","dashboard","reports"].includes(b.dataset.view))b.style.display=session.role==="admin"?"":"none"});
     $("#lu").value="";$("#lp").value="";$("#lerr").textContent="";
     fit&&setTimeout(fit,0);
   }else{ $("#lu").focus() }

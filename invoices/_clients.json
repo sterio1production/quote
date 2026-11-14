@@ -1,4 +1,12 @@
 {
-  "clients": [],
+  "clients": [
+    {
+      "id": "cli_mwgddk9egh1",
+      "name": "UCU DINNER",
+      "address": "",
+      "contact": "",
+      "updated": 1794658571474
+    }
+  ],
   "deleted": {}
 }

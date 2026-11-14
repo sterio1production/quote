@@ -1,4 +1,27 @@
 {
-  "expenses": [],
-  "deleted": {}
+  "expenses": [
+    {
+      "id": "exp_mwgcscxwdpg",
+      "date": "2026-11-14",
+      "cat": "Transport",
+      "desc": "",
+      "payee": "",
+      "amt": 50000,
+      "inv": "inv_mwgcnj1hg2x",
+      "updated": 1794657582212
+    },
+    {
+      "id": "exp_mwgehrs6by6",
+      "date": "2026-11-14",
+      "cat": "Labor / crew",
+      "desc": "DJ",
+      "payee": "100000",
+      "amt": 100000,
+      "inv": "",
+      "updated": 1794660447462
+    }
+  ],
+  "deleted": {
+    "exp_mwge1bavc3m": 1794660004918
+  }
 }

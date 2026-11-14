@@ -1,0 +1,56 @@
+{
+  "id": "inv_mwgeag1zpnn",
+  "type": "proforma",
+  "status": "paid",
+  "date": "2026-11-14",
+  "ref": "STE/PI/26-0004",
+  "dueDate": "2026-12-11",
+  "efris": "",
+  "againstRef": "",
+  "client": "UCU DINNER",
+  "address": "",
+  "event": "",
+  "venue": "Munyonyo",
+  "dateFrom": "2026-11-13",
+  "dateTo": "",
+  "timeFrom": "",
+  "timeTo": "",
+  "contact": "",
+  "items": [
+    {
+      "d": "PA SOUND SYSTEM",
+      "q": 1,
+      "days": 1,
+      "p": 500000
+    },
+    {
+      "d": "SINGLE BASS ",
+      "q": 3,
+      "days": 1,
+      "p": 0
+    },
+    {
+      "d": "TOPS ",
+      "q": 6,
+      "days": 1,
+      "p": 0
+    },
+    {
+      "d": "DJ SET (CONSOLE & DJ)",
+      "q": 1,
+      "days": 1,
+      "p": 0
+    }
+  ],
+  "payments": [],
+  "discount": 0,
+  "vat": 0,
+  "vatRate": 18,
+  "terms": "Accounts are due on demand.\nAll payments made to STEREO 1 PRODUCTION.\nEvent service delivery only after issuance of an LPO from the client.\nInvoice must be paid within 7 days after tax invoicing.",
+  "notes": "Payments to be made to:\nAccount Name: Stereo 1 Production (UGX).\nBank: [bank and branch].\nAccount No: [account number]",
+  "created": 1794660105671,
+  "updated": 1794660351158,
+  "clientId": "cli_mwgddk9egh1",
+  "paidDate": "2026-11-14",
+  "file": "STE_PI_26-0004.json"
+}

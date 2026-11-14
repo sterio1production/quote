@@ -45,13 +45,19 @@
       "p": 0
     }
   ],
-  "payments": [],
+  "payments": [
+    {
+      "l": "Down payment",
+      "a": "",
+      "dt": "2026-10-26"
+    }
+  ],
   "discount": 0,
   "vat": 0,
   "vatRate": 18,
   "terms": "Accounts are due on demand.\nAll payments made to STEREO 1 PRODUCTION.\nEvent service delivery only after issuance of an LPO from the client.\nInvoice must be paid within 7 days after tax invoicing.",
   "notes": "Payments to be made to:\nAccount Name: Stereo 1 Production (UGX).\nBank: [bank and branch].\nAccount No: [account number]",
   "created": 1792524639012,
-  "updated": 1792525090092,
+  "updated": 1792962332965,
   "file": "STE_PI_26-0003.json"
 }

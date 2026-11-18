@@ -21,7 +21,7 @@
       "d": "PA SOUND SYSTEM",
       "q": 1,
       "days": 1,
-      "p": 500000
+      "p": 600000
     },
     {
       "d": "SINGLE BASS ",
@@ -47,9 +47,9 @@
   "vat": 0,
   "vatRate": 18,
   "terms": "Accounts are due on demand.\nAll payments made to STEREO 1 PRODUCTION.\nEvent service delivery only after issuance of an LPO from the client.\nInvoice must be paid within 7 days after tax invoicing.",
-  "notes": "Payments to be made to:\nAccount Name: Stereo 1 Production (UGX).\nBank: [bank and branch].\nAccount No: [account number]",
+  "notes": "Payments to be made in cash\n",
   "created": 1794660105671,
-  "updated": 1794660351158,
+  "updated": 1794999353643,
   "clientId": "cli_mwgddk9egh1",
   "paidDate": "2026-11-14",
   "file": "STE_PI_26-0004.json"
